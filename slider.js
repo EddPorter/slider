@@ -1,4 +1,4 @@
-var getActions, getNumberOfDisplacedPieces, getSumDistanceOfDisplacedPieces, heuristic, isGoal, l, removeChoice, solve, takeAction, _u;
+var areStatesEqual, getActions, getNumberOfDisplacedPieces, getSumDistanceOfDisplacedPieces, heuristic, isGoal, l, removeChoice, solve, takeAction, _u;
 l = require('./linkedlist');
 _u = require('./underscore');
 solve = function(row_count, column_count, puzzle) {
@@ -13,18 +13,12 @@ solve = function(row_count, column_count, puzzle) {
     if (frontier.length === 0) {
       return "ERROR: Puzzle cannot be solved";
     }
-    console.log("picking next best path on the frontier");
-    console.log("pre-frontier count: " + frontier.length);
     path = removeChoice(frontier, row_count, column_count);
-    console.log("path length: " + path.length + ", frontiers: " + frontier.length);
     s = path[path.length - 1];
     explored[explored.length] = s;
     if (isGoal(s, row_count, column_count)) {
-      console.log("reached the goal");
       return path;
     }
-    console.log("exploring possible actions");
-    console.log(explored);
     _results.push((function() {
       var _i, _len, _ref, _results2;
       _ref = getActions(s, row_count, column_count);
@@ -32,21 +26,23 @@ solve = function(row_count, column_count, puzzle) {
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         a = _ref[_i];
         result = takeAction(s, a, row_count, column_count);
-        console.log(explored.indexOf(result));
         _results2.push((function() {
           var _j, _len2;
-          if (-1 === explored.indexOf(result)) {
+          if (!_u.any(explored, (function(s) {
+            return areStatesEqual(s, result);
+          }))) {
             found = false;
             for (_j = 0, _len2 = frontier.length; _j < _len2; _j++) {
               f = frontier[_j];
-              if (-1 !== f.indexOf(result)) {
+              if (_u.any(f, (function(s) {
+                return areStatesEqual(s, result);
+              }))) {
                 found = true;
                 break;
               }
             }
             if (!found) {
-              console.log("found new unexplored path");
-              new_path = [path];
+              new_path = path.slice();
               new_path[new_path.length] = result;
               return frontier[frontier.length] = new_path;
             }
@@ -63,15 +59,14 @@ removeChoice = function(frontier, rows, columns) {
   foldl = function(memo, path) {
     var h, state;
     state = path[path.length - 1];
-    h = heuristic(state, rows, columns) + path.length;
-    if (h < memo[0] || (memo[0] = -1)) {
+    h = heuristic(state, rows, columns) + path.length - 1;
+    if (h < memo[0] || memo[0] === -1) {
       return [h, path];
     } else {
       return memo;
     }
   };
   _ref = _u.reduce(frontier, foldl, [-1, null]), h = _ref[0], best_state = _ref[1];
-  console.log("best heuristic: " + h);
   n = frontier.indexOf(best_state);
   frontier.splice(n, 1);
   return best_state;
@@ -114,10 +109,12 @@ getActions = function(state, rows, columns) {
 };
 takeAction = function(state, action, rows, columns) {
   var new_state;
+  if (state[action[0] * columns + action[1]] !== 0) {
+    return "Invalid action given the state";
+  }
   new_state = state.slice();
-  console.log(new_state.length);
-  new_state[rows * action[2] + action[3]] = 0;
-  new_state[rows * action[0] + action[1]] = state[rows * action[2] + action[3]];
+  new_state[columns * action[0] + action[1]] = state[columns * action[2] + action[3]];
+  new_state[columns * action[2] + action[3]] = 0;
   return new_state;
 };
 heuristic = function(state, rows, columns) {
@@ -145,9 +142,9 @@ getSumDistanceOfDisplacedPieces = function(state, rows, columns) {
     for (column = 0, _ref2 = columns - 1; 0 <= _ref2 ? column <= _ref2 : column >= _ref2; 0 <= _ref2 ? column++ : column--) {
       cell = row * columns + column;
       if (state[cell] !== expected_piece) {
-        piece = state[cell] === 0 ? state.length : state[cell];
-        expected_row = (piece - 1) / columns;
-        expected_column = (piece - 1) / rows;
+        piece = state[cell] === 0 ? rows * columns : state[cell];
+        expected_row = Math.floor((piece - 1) / columns);
+        expected_column = Math.floor((piece - 1) % columns);
         sum_distance += Math.abs(expected_row - row) + Math.abs(expected_column - column);
       }
       expected_piece = (expected_piece + 1) % (rows * columns);
@@ -155,5 +152,21 @@ getSumDistanceOfDisplacedPieces = function(state, rows, columns) {
   }
   return sum_distance;
 };
-console.log("puzzle #1: " + solve(2, 2, [1, 2, 3, 0]));
-console.log("puzzle #2: " + solve(2, 2, [1, 0, 3, 2]));
+areStatesEqual = function(s1, s2) {
+  var n, _ref;
+  if (s1.length !== s2.length) {
+    return "Mismatched state lengths";
+  }
+  for (n = 0, _ref = s1.length - 1; 0 <= _ref ? n <= _ref : n >= _ref; 0 <= _ref ? n++ : n--) {
+    if (s1[n] !== s2[n]) {
+      return false;
+    }
+  }
+  return true;
+};
+console.log("puzzle #1: ");
+console.log(solve(2, 2, [1, 2, 3, 0]));
+console.log("puzzle #2: ");
+console.log(solve(2, 2, [1, 0, 3, 2]));
+console.log("puzzle #3: ");
+console.log(solve(3, 3, [4, 8, 1, 7, 3, 5, 6, 2, 0]));
