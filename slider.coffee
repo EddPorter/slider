@@ -1,7 +1,7 @@
 l = require './linkedlist'
 _u = require './underscore'
 
-solve = (row_count, column_count, puzzle) ->
+exports.solve = (row_count, column_count, puzzle) ->
   if puzzle.length != row_count * column_count
     return
 
@@ -132,11 +132,11 @@ areStatesEqual = (s1, s2) ->
       return false
   return true
 
-console.log "puzzle #1: "
-console.log solve(2,2,[1,2,3,0])
-console.log "puzzle #2: "
-console.log solve(2,2,[1,0,3,2])
-console.log "puzzle #3: "
-console.log solve(3,3,[4,8,1,7,3,5,6,2,0])
+#console.log "puzzle #1: "
+#console.log solve(2,2,[1,2,3,0])
+#console.log "puzzle #2: "
+#console.log solve(2,2,[1,0,3,2])
+#console.log "puzzle #3: "
+#console.log solve(3,3,[4,8,1,7,3,5,6,2,0])
 #console.log "puzzle #4: "
 #console.log solve(3,3,[4,8,1,7,3,5,6,2,0])

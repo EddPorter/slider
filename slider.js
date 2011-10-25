@@ -1,7 +1,7 @@
-var areStatesEqual, getActions, getNumberOfDisplacedPieces, getSumDistanceOfDisplacedPieces, heuristic, isGoal, l, removeChoice, solve, takeAction, _u;
+var areStatesEqual, getActions, getNumberOfDisplacedPieces, getSumDistanceOfDisplacedPieces, heuristic, isGoal, l, removeChoice, takeAction, _u;
 l = require('./linkedlist');
 _u = require('./underscore');
-solve = function(row_count, column_count, puzzle) {
+exports.solve = function(row_count, column_count, puzzle) {
   var a, explored, f, found, frontier, new_path, path, result, s, _results;
   if (puzzle.length !== row_count * column_count) {
     return;
@@ -164,9 +164,3 @@ areStatesEqual = function(s1, s2) {
   }
   return true;
 };
-console.log("puzzle #1: ");
-console.log(solve(2, 2, [1, 2, 3, 0]));
-console.log("puzzle #2: ");
-console.log(solve(2, 2, [1, 0, 3, 2]));
-console.log("puzzle #3: ");
-console.log(solve(3, 3, [4, 8, 1, 7, 3, 5, 6, 2, 0]));
