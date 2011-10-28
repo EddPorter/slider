@@ -1,6 +1,6 @@
 {
-    "name": "application-name"
-  , "version": "0.0.1"
+    "name": "slider"
+  , "version": "0.4.12"
   , "private": true
   , "dependencies": {
       "express": "2.4.7"
