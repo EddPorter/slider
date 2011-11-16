@@ -1,4 +1,3 @@
-
 /**
  * Module dependencies.
  */
@@ -41,7 +40,7 @@ app.get('/:rows/:columns/:puzzle', function(req, res) {
   if ( rows > 3 || columns > 3 ) {
     res.render('solution', {
       title: 'No Solution',
-      solution: 'Puzzle to large to solve'
+      solution: 'Puzzle too large to solve'
     });
   } else {
    var puzzle = JSON.parse(req.params.puzzle);
