@@ -15,6 +15,12 @@ Then visit <http://localhost:8000>. The solver runs in a Web Worker, which
 browsers will not start from a `file://` address. If you open `index.html`
 directly it still works, but the page freezes while it searches.
 
+## Publishing
+
+`.github/workflows/pages.yml` runs the tests and publishes the page to GitHub
+Pages whenever `master` changes. Pages must be switched on once, under Settings,
+Pages, with the source set to GitHub Actions.
+
 ## Playing
 
 Click a tile to slide it. Clicking a tile in line with the gap slides everything
