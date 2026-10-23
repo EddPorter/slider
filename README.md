@@ -1,8 +1,8 @@
 # Slider
 
-A sliding-tile puzzle (the 8-puzzle, 15-puzzle and their relatives) that runs
-entirely in the browser. Play it yourself, ask for a hint, or watch it solve the
-board.
+Slider is an interactive sliding-tile puzzle (2 × 2 to 6 × 6) with
+shortest-route finding, hints and auto-solve. It runs in the browser with no
+dependencies, and covers the 8-puzzle, the 15-puzzle and their relatives.
 
 ## Running it
 
