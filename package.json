@@ -1,9 +1,10 @@
 {
-    "name": "slider"
-  , "version": "0.4.12"
-  , "private": true
-  , "dependencies": {
-      "express": "2.4.7"
-    , "jade": ">= 0.0.1"
+  "name": "slider",
+  "version": "1.0.0",
+  "description": "An interactive sliding-tile puzzle with shortest-route finding",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node test.js"
   }
 }
