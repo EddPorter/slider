@@ -66,3 +66,12 @@ positions, which take 31 moves.
 This began in 2011 as a CoffeeScript and Express solver for boards up to 3 × 3.
 It was rewritten from scratch as a client-side app. The original is in the git
 history.
+
+## Licence
+
+Free for any non-commercial use, under the
+[PolyForm Noncommercial Licence 1.0.0](LICENSE). That covers personal use,
+study, hobby projects and use by charities and educational institutions. It does
+not cover selling the software or using it for commercial gain. Note that this
+is a source-available licence, not an open-source one in the Open Source
+Initiative's sense, because it restricts commercial use.
