@@ -1,8 +1,8 @@
 # Slider
 
-A sliding-tile puzzle (the 8-puzzle, 15-puzzle and their relatives) that runs
-entirely in the browser. Play it yourself, ask for a hint, or watch it solve the
-board.
+Slider is an interactive sliding-tile puzzle (2 × 2 to 6 × 6) with
+shortest-route finding, hints and auto-solve. It runs in the browser with no
+dependencies, and covers the 8-puzzle, the 15-puzzle and their relatives.
 
 ## Running it
 
@@ -66,3 +66,12 @@ positions, which take 31 moves.
 This began in 2011 as a CoffeeScript and Express solver for boards up to 3 × 3.
 It was rewritten from scratch as a client-side app. The original is in the git
 history.
+
+## Licence
+
+Free for any non-commercial use, under the
+[PolyForm Noncommercial Licence 1.0.0](LICENSE). That covers personal use,
+study, hobby projects and use by charities and educational institutions. It does
+not cover selling the software or using it for commercial gain. Note that this
+is a source-available licence, not an open-source one in the Open Source
+Initiative's sense, because it restricts commercial use.
