@@ -1,0 +1,62 @@
+# Slider
+
+A sliding-tile puzzle (the 8-puzzle, 15-puzzle and their relatives) that runs
+entirely in the browser. Play it yourself, ask for a hint, or watch it solve the
+board.
+
+## Running it
+
+It is a static page with no dependencies and no build step. Serve the folder
+with any web server and open it:
+
+    python3 -m http.server 8000
+
+Then visit <http://localhost:8000>. The solver runs in a Web Worker, which
+browsers will not start from a `file://` address. If you open `index.html`
+directly it still works, but the page freezes while it searches.
+
+## Playing
+
+Click a tile to slide it. Clicking a tile in line with the gap slides everything
+between them. The arrow keys move the tile in the direction of the arrow.
+Shuffle always produces a board that can be solved, as half of all arrangements
+cannot be.
+
+Boards run from 2 × 2 to 6 × 6.
+
+## Finding routes
+
+**Hint** highlights the next tile to move, and **Solve** plays the whole route.
+Both use the chosen route-finding mode.
+
+* **Shortest** uses IDA\* with the Manhattan-distance heuristic plus linear
+  conflicts, so the route has the fewest moves possible. It uses very little
+  memory. A random 3 × 3 is instant, and a random 4 × 4 takes from a fraction of
+  a second to about ten seconds in Node, with the worst boards taking longer, so
+  there is a Cancel button. It is not offered beyond 4 × 4.
+* **Quick** uses weighted A\*, which trades optimality for speed. Routes are
+  around 35 to 50 per cent longer than the shortest at 4 × 4. A random 6 × 6
+  usually takes well under a second.
+
+If you play on after asking for a hint, the route is kept for as long as you
+follow it.
+
+## Layout
+
+| File | Purpose |
+| --- | --- |
+| `solver.js` | Board logic, solvability test and both solvers. No browser dependencies, so it also runs in Node. |
+| `worker.js` | Runs the solver off the main thread. |
+| `app.js`, `index.html`, `style.css` | The interface. |
+| `test.js` | Tests. Run with `node test.js`. |
+
+The tests check the solvability rule against exhaustive breadth-first search on
+every board up to 3 × 3, and check that the shortest-route solver agrees with
+breadth-first search on 2 × 3 and 3 × 3 boards, including the hardest 3 × 3
+positions, which take 31 moves.
+
+## History
+
+This began in 2011 as a CoffeeScript and Express solver for boards up to 3 × 3.
+It was rewritten from scratch as a client-side app. The original is in the git
+history.

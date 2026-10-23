@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slider</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Slider</h1>
+
+    <div class="stats" aria-live="polite">
+      <span>Moves <strong id="moves">0</strong></span>
+      <span id="status">Slide the tiles into order.</span>
+    </div>
+
+    <div id="board" class="board" role="group" aria-label="Puzzle board"></div>
+
+    <div class="controls">
+      <button id="shuffle" type="button">Shuffle</button>
+      <button id="hint" type="button">Hint</button>
+      <button id="solve" type="button">Solve</button>
+      <button id="cancel" type="button" hidden>Cancel</button>
+    </div>
+
+    <div class="options">
+      <label>Size
+        <select id="size">
+          <option value="2">2 × 2</option>
+          <option value="3" selected>3 × 3</option>
+          <option value="4">4 × 4</option>
+          <option value="5">5 × 5</option>
+          <option value="6">6 × 6</option>
+        </select>
+      </label>
+      <fieldset>
+        <legend>Route finding</legend>
+        <label><input type="radio" name="mode" value="optimal" checked> Shortest</label>
+        <label><input type="radio" name="mode" value="quick"> Quick</label>
+      </fieldset>
+    </div>
+
+    <p class="help">
+      Click a tile to slide it, or use the arrow keys. Clicking a tile in line
+      with the gap slides the whole row or column. <em>Shortest</em> finds a
+      route with the fewest possible moves, which can take a while on a hard
+      4 × 4 and is not offered beyond that. <em>Quick</em> finds a good route
+      almost instantly, but not necessarily the shortest.
+    </p>
+  </main>
+
+  <script src="solver.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

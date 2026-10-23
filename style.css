@@ -1,0 +1,162 @@
+:root {
+  --bg: #f4f1ea;
+  --surface: #e4dfd2;
+  --text: #26231d;
+  --muted: #6b655a;
+  --tile: #fffdf8;
+  --tile-home: #dcebd4;
+  --accent: #b5532b;
+  --accent-text: #ffffff;
+  --border: #bdb6a4;
+  --gap: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1a17;
+    --surface: #2b2823;
+    --text: #ece7db;
+    --muted: #a39d8f;
+    --tile: #3a362f;
+    --tile-home: #3b4a37;
+    --accent: #e0805a;
+    --accent-text: #1c1a17;
+    --border: #4a453b;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+main {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.5rem 16px 3rem;
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
+}
+
+.stats {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  min-height: 3em;
+  margin-bottom: 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.stats strong { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.board {
+  --n: 3;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: var(--gap) solid var(--surface);
+  border-radius: 10px;
+}
+
+.tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% / var(--n));
+  height: calc(100% / var(--n));
+  padding: calc(var(--gap) / 2);
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transform: translate(calc(var(--c) * 100%), calc(var(--r) * 100%));
+  transition: transform 0.14s ease-out;
+  /* Tile faces are drawn by ::before so the gap between tiles needs no maths. */
+  font-size: clamp(1rem, calc(16vw / var(--n)), 2.25rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.tile::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--gap) / 2);
+  background: var(--tile);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  z-index: -1;
+}
+
+.tile.home::before { background: var(--tile-home); }
+.tile.hint::before { outline: 3px solid var(--accent); outline-offset: 1px; }
+.tile:focus-visible::before { outline: 3px solid var(--text); outline-offset: 1px; }
+
+.controls, .options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+button:not(.tile) {
+  min-height: 2.5rem;
+  padding: 0 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:not(.tile):hover:not(:disabled) { border-color: var(--accent); }
+button:not(.tile):disabled { opacity: 0.5; cursor: default; }
+#solve { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+select {
+  min-height: 2.5rem;
+  margin-left: 0.4rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+fieldset {
+  display: flex;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0 0.75rem 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+legend { padding: 0 0.3rem; color: var(--muted); font-size: 0.8rem; }
+
+label:has(input:disabled) { color: var(--muted); }
+
+.help {
+  margin-top: 1.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile { transition: none; }
+}
