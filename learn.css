@@ -1,0 +1,224 @@
+/* Extra styles for the explainer page. The colour tokens and the board and tile
+   styles come from style.css. */
+
+:root {
+  --gd-bg: #fbf9f4;
+  --gd-grid: #e0dacb;
+  --gd-wall: #3b372f;
+  --gd-frontier: #bfd9f2;
+  --gd-expanded: #e9d6a8;
+  --gd-route: #b5532b;
+  --gd-start: #3f7d4e;
+  --gd-goal: #b5532b;
+  --link: #9a4423;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gd-bg: #22201c;
+    --gd-grid: #36322b;
+    --gd-wall: #8d8574;
+    --gd-frontier: #2f5273;
+    --gd-expanded: #5b4a25;
+    --gd-route: #e0805a;
+    --gd-start: #5aa56c;
+    --gd-goal: #e0805a;
+    --link: #f0a07c;
+  }
+}
+
+a { color: var(--link); }
+
+main.article { max-width: 46rem; }
+
+.article h2 { margin: 2.5rem 0 0.75rem; font-size: 1.4rem; }
+.article h3 { margin: 1.75rem 0 0.5rem; font-size: 1.05rem; }
+.article p, .article li { max-width: 40rem; }
+
+.nav { margin: 0 0 1rem; font-size: 0.9rem; }
+
+.lede { font-size: 1.1rem; }
+
+.summary {
+  margin: 1.5rem 0;
+  padding: 0.5rem 1.25rem 0.75rem;
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+}
+.summary h2 { margin: 0.5rem 0 0.25rem; font-size: 1rem; }
+.summary ul { margin: 0; padding-left: 1.1rem; }
+
+.toc { margin: 1.5rem 0 2rem; font-size: 0.95rem; }
+.toc ol { margin: 0; padding-left: 1.4rem; columns: 2 16rem; column-gap: 2rem; }
+
+.formula {
+  margin: 1rem 0;
+  font-size: 1.25rem;
+  font-family: Georgia, "Times New Roman", serif;
+  text-align: center;
+}
+
+var { font-family: Georgia, "Times New Roman", serif; }
+code { font-size: 0.9em; }
+sup a { text-decoration: none; }
+
+.note { padding: 0.5rem 1rem; background: var(--surface); border-radius: 6px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- widgets ---------- */
+
+.widget {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+.widget button:not(.tile):not(.succ) { min-height: 2.25rem; padding: 0 0.9rem; }
+.widget label { font-size: 0.9rem; }
+.widget input[type="range"] { vertical-align: middle; accent-color: var(--accent); }
+
+table.data { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.data th, table.data td {
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+table.data th { font-weight: 600; color: var(--muted); }
+table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data tr.current th, table.data tr.current td { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+
+/* ---------- puzzle playground ---------- */
+
+.playground {
+  display: grid;
+  grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.playground .board { width: 100%; font-size: 1rem; }
+.playground .tile { font-size: 1.6rem; }
+.playground .pg-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; align-items: center; }
+.playground .pg-side p { margin: 0 0 0.6rem; }
+.playground .pg-side ul { margin: 0 0 0.6rem; padding-left: 1.1rem; }
+.playground .pg-status { font-size: 0.95rem; }
+.playground .ok { color: var(--gd-start); font-weight: 600; }
+.playground .bad { color: var(--gd-goal); font-weight: 600; }
+
+/* A tile's Manhattan distance, shown in its corner. */
+.board.show-d .tile[data-d]::after {
+  content: attr(data-d);
+  position: absolute;
+  right: calc(var(--gap) / 2 + 7px);
+  bottom: calc(var(--gap) / 2 + 3px);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.board .tile.conflict::before { outline: 2px dashed var(--accent); outline-offset: -3px; }
+
+.mini {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 1.35rem);
+  gap: 2px;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.mini span {
+  display: grid;
+  place-items: center;
+  height: 1.35rem;
+  font-size: 0.78rem;
+  background: var(--tile);
+  border-radius: 3px;
+}
+.mini span.blank { background: transparent; }
+.mini span.moved { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.successors { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0.5rem 0; }
+
+button.succ {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.6rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+button.succ:hover { border-color: var(--accent); }
+button.succ.best { border-color: var(--accent); }
+button.succ .tag { color: var(--accent); font-weight: 700; min-height: 1.1em; }
+button.succ:not(.best) .tag { color: var(--muted); font-weight: 400; }
+
+/* ---------- grid demo ---------- */
+
+.gd-controls, .gd-buttons, .cmp-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.weight-label { font-size: 0.85rem; color: var(--muted); }
+
+#gd-canvas {
+  display: block;
+  width: 100%;
+  background: var(--gd-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.status { margin: 0.6rem 0 0.2rem; min-height: 1.5em; font-weight: 600; }
+.readout { margin: 0; min-height: 1.5em; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0.5rem 0 0; padding: 0; list-style: none; font-size: 0.85rem; }
+.swatch { display: inline-block; width: 0.9rem; height: 0.9rem; vertical-align: -0.1rem; border: 1px solid var(--border); border-radius: 2px; }
+.swatch.frontier { background: var(--gd-frontier); }
+.swatch.expanded { background: var(--gd-expanded); }
+.swatch.route { background: var(--gd-route); }
+.swatch.wall { background: var(--gd-wall); }
+
+.gd-compare { margin-top: 1rem; }
+.gd-compare button { margin-bottom: 0.6rem; }
+
+/* ---------- strategy comparison ---------- */
+
+.cmp-top { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 0.9rem; }
+.cmp-board .mini { grid-template-columns: repeat(3, 1.8rem); }
+.cmp-board .mini span { height: 1.8rem; font-size: 0.95rem; }
+
+.bar-col { width: 25%; }
+.bar { display: block; height: 0.7rem; min-width: 2px; background: var(--accent); border-radius: 2px; }
+.cmp-ida { margin-top: 1rem; font-size: 0.9rem; }
+.cmp-ida table { max-width: 24rem; }
+.cmp-ida p { margin: 0 0 0.5rem; }
+
+.refs { font-size: 0.9rem; padding-left: 1.4rem; }
+.refs li { margin-bottom: 0.4rem; }
+
+@media (max-width: 34rem) {
+  .playground { grid-template-columns: minmax(0, 1fr); }
+  .bar-col { display: none; }
+  table.data td.bar-cell { display: none; }
+}

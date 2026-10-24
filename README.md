@@ -47,19 +47,34 @@ Both use the chosen route-finding mode.
 If you play on after asking for a hint, the route is kept for as long as you
 follow it.
 
+## Learning how it works
+
+[`explain.html`](explain.html) is a page for people who want to understand the
+algorithms rather than just use them. It builds up from the idea of a puzzle as a
+maze of positions to A\*, weighted A\* and IDA\*, with interactive demos:
+a puzzle where you can see each heuristic's estimate and the scores A\* would
+give each move, a grid where you can draw walls and watch A\* run with any
+weight, and a table that solves one board with every strategy side by side. It
+ends with references.
+
 ## Layout
 
 | File | Purpose |
 | --- | --- |
-| `solver.js` | Board logic, solvability test and both solvers. No browser dependencies, so it also runs in Node. |
+| `solver.js` | Board logic, solvability test, heuristics and both solvers. No browser dependencies, so it also runs in Node. |
 | `worker.js` | Runs the solver off the main thread. |
-| `app.js`, `index.html`, `style.css` | The interface. |
+| `app.js`, `index.html`, `style.css` | The puzzle interface. |
+| `explain.html`, `learn.js`, `learn.css` | The explainer page and its interactive demos. |
+| `gridsearch.js` | A\* on a grid, one step at a time, for the explainer's demo. |
 | `test.js` | Tests. Run with `node test.js`. |
 
 The tests check the solvability rule against exhaustive breadth-first search on
 every board up to 3 × 3, and check that the shortest-route solver agrees with
 breadth-first search on 2 × 3 and 3 × 3 boards, including the hardest 3 × 3
-positions, which take 31 moves.
+positions, which take 31 moves. They also check that none of the four heuristics
+ever overestimates on any of the 181,440 positions of a 3 × 3 board, that
+weighted search stays within its guaranteed bound, and that the grid search finds
+shortest routes.
 
 ## History
 

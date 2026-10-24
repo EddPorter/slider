@@ -167,6 +167,73 @@
     return h;
   }
 
+  function misplaced(g, b) {
+    var count = 0;
+    for (var i = 0; i < g.n; i++) if (b[i] !== 0 && b[i] !== i + 1) count++;
+    return count;
+  }
+
+  // The heuristics, from weakest to strongest. Each is a lower bound on the
+  // number of moves remaining, so each is safe to use for shortest routes.
+  var HEURISTICS = {
+    none: function () { return 0; },
+    misplaced: misplaced,
+    manhattan: manhattan,
+    conflict: fullHeuristic
+  };
+
+  function heuristicValue(name, board, rows, cols) {
+    return HEURISTICS[name](new Geometry(rows, cols), board);
+  }
+
+  // Splits the "conflict" heuristic into its parts, for showing to people:
+  // each tile's Manhattan distance, the extra moves each line's conflicts add,
+  // and the tiles that are in a conflict.
+  function heuristicBreakdown(board, rows, cols) {
+    var g = new Geometry(rows, cols), i, j;
+    var distance = [], manhattanTotal = 0, rowExtra = [], colExtra = [], extra = 0;
+    for (i = 0; i < g.n; i++) {
+      var t = board[i];
+      var d = t === 0 ? 0 : Math.abs(g.goalRow[t] - ((i / cols) | 0)) +
+                            Math.abs(g.goalCol[t] - (i % cols));
+      distance.push(d);
+      manhattanTotal += d;
+    }
+    for (i = 0; i < rows; i++) { rowExtra.push(2 * lineConflicts(g, board, i, true)); extra += rowExtra[i]; }
+    for (i = 0; i < cols; i++) { colExtra.push(2 * lineConflicts(g, board, i, false)); extra += colExtra[i]; }
+
+    // A tile is "in a conflict" if it shares a line with another tile that
+    // belongs in that line but sits in the opposite order.
+    var inConflict = {};
+    function mark(isRow, index) {
+      var len = isRow ? cols : rows, cells = [];
+      for (var k = 0; k < len; k++) {
+        var cell = isRow ? index * cols + k : k * cols + index, tile = board[cell];
+        if (tile !== 0 && (isRow ? g.goalRow[tile] : g.goalCol[tile]) === index) cells.push(cell);
+      }
+      for (var a = 0; a < cells.length; a++) {
+        for (var c = a + 1; c < cells.length; c++) {
+          var ta = board[cells[a]], tc = board[cells[c]];
+          if ((isRow ? g.goalCol[ta] > g.goalCol[tc] : g.goalRow[ta] > g.goalRow[tc])) {
+            inConflict[cells[a]] = inConflict[cells[c]] = true;
+          }
+        }
+      }
+    }
+    for (i = 0; i < rows; i++) mark(true, i);
+    for (j = 0; j < cols; j++) mark(false, j);
+
+    return {
+      distance: distance,
+      manhattan: manhattanTotal,
+      rowExtra: rowExtra,
+      colExtra: colExtra,
+      extra: extra,
+      total: manhattanTotal + extra,
+      conflictCells: Object.keys(inConflict).map(Number)
+    };
+  }
+
   /* ---------- optimal search: IDA* ---------- */
 
   // Returns { moves, nodes } with a shortest solution. `options.onProgress`
@@ -240,11 +307,16 @@
       return min;
     }
 
-    var bound = h;
+    // `iterations` records each pass: the depth limit and positions visited.
+    var bound = h, iterations = [];
     for (;;) {
       if (options.onProgress) options.onProgress({ bound: bound, nodes: nodes });
+      var before = nodes;
       var result = search(0, h, bound, -1);
-      if (result === FOUND) return { moves: path.slice(), nodes: nodes, optimal: true };
+      iterations.push({ bound: bound, nodes: nodes - before });
+      if (result === FOUND) {
+        return { moves: path.slice(), nodes: nodes, optimal: true, iterations: iterations };
+      }
       if (result === Infinity) return null;
       bound = result;
     }
@@ -285,13 +357,14 @@
     return String.fromCharCode.apply(null, b);
   }
 
-  // One weighted A* pass: f = g + weight * h. Gives up after `maxNodes`
-  // expansions and returns null.
-  function weightedAStar(board, rows, cols, weight, maxNodes, onProgress, nodesBefore) {
+  // One weighted A* pass: f = g + weight * h, with h given by `heuristic`, a
+  // function of (geometry, board). Gives up after `maxNodes` expansions and
+  // returns null. With weight 1 and an admissible h the route is shortest.
+  function weightedAStar(board, rows, cols, weight, maxNodes, onProgress, nodesBefore, heuristic) {
     var g = new Geometry(rows, cols);
     var seen = new Map(), heap = new Heap(), nodes = 0;
     var start = { b: board.slice(), g: 0, f: 0, parent: null, cell: -1, blank: board.indexOf(0) };
-    start.f = weight * fullHeuristic(g, start.b);
+    start.f = weight * heuristic(g, start.b);
     seen.set(stateKey(start.b), 0);
     heap.push(start);
 
@@ -314,11 +387,21 @@
         var key = stateKey(nb), cost = cur.g + 1;
         if (seen.has(key) && seen.get(key) <= cost) continue;
         seen.set(key, cost);
-        heap.push({ b: nb, g: cost, f: cost + weight * fullHeuristic(g, nb),
+        heap.push({ b: nb, g: cost, f: cost + weight * heuristic(g, nb),
                     parent: cur, cell: cell, blank: cell });
       }
     }
     return null;
+  }
+
+  // A single weighted A* pass with a chosen heuristic ('none', 'misplaced',
+  // 'manhattan' or 'conflict'), for experiments. Unlike solveQuick it does not
+  // retry. The result's `nodes` is the number of positions expanded.
+  function searchWith(board, rows, cols, options) {
+    options = options || {};
+    var weight = options.weight === undefined ? 1 : options.weight;
+    return weightedAStar(board, rows, cols, weight, options.maxNodes || 1.2e6,
+                         options.onProgress, 0, HEURISTICS[options.heuristic || 'conflict']);
   }
 
   // Finds a solution, not necessarily a shortest one. A larger weight finds
@@ -330,7 +413,8 @@
     var weight = options.weight || (cells <= 9 ? 2 : cells <= 16 ? 3 : cells <= 25 ? 4 : 6);
     var maxNodes = options.maxNodes || 1.2e6, spent = 0;
     for (var attempt = 0; attempt < 3; attempt++, weight *= 2) {
-      var r = weightedAStar(board, rows, cols, weight, maxNodes, options.onProgress, spent);
+      var r = weightedAStar(board, rows, cols, weight, maxNodes, options.onProgress, spent,
+                            fullHeuristic);
       if (r) return r;
       spent += maxNodes;
     }
@@ -354,6 +438,9 @@
     randomBoard: randomBoard,
     solve: solve,
     solveOptimal: solveOptimal,
-    solveQuick: solveQuick
+    solveQuick: solveQuick,
+    search: searchWith,
+    heuristicValue: heuristicValue,
+    heuristicBreakdown: heuristicBreakdown
   };
 });

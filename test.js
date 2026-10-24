@@ -151,4 +151,182 @@ test('unsolvable and already-solved boards', function () {
   assert.deepStrictEqual(S.solve(S.goalBoard(3, 3), 3, 3, 'optimal').moves, []);
 });
 
+
+/* ---------- heuristics and instrumented search ---------- */
+
+var HEURISTIC_NAMES = ['none', 'misplaced', 'manhattan', 'conflict'];
+
+test('every heuristic is admissible, and each is at least as strong as the last (all 181,440 3x3 boards)', function () {
+  var dist = distances(3, 3);
+  dist.forEach(function (d, key) {
+    var b = key.split(',').map(Number), previous = 0;
+    HEURISTIC_NAMES.forEach(function (name) {
+      var h = S.heuristicValue(name, b, 3, 3);
+      assert(h <= d, name + ' overestimates on ' + key + ': ' + h + ' > ' + d);
+      assert(h >= previous, name + ' is weaker than the one before on ' + key);
+      previous = h;
+    });
+  });
+});
+
+test('heuristicBreakdown explains the conflict heuristic', function () {
+  var solved = S.heuristicBreakdown(S.goalBoard(3, 3), 3, 3);
+  assert.strictEqual(solved.total, 0);
+  assert.deepStrictEqual(solved.conflictCells, []);
+
+  // Two reversed pairs, each in its own row: tiles 1 and 2, then 7 and 8.
+  var b = [2, 1, 3, 4, 5, 6, 8, 7, 0], r = S.heuristicBreakdown(b, 3, 3);
+  assert.strictEqual(r.manhattan, 4);
+  assert.strictEqual(r.extra, 4);
+  assert.strictEqual(r.total, 8);
+  assert.deepStrictEqual(r.rowExtra, [2, 0, 2]);
+  assert.deepStrictEqual(r.colExtra, [0, 0, 0]);
+  assert.deepStrictEqual(r.conflictCells.sort(function (x, y) { return x - y; }), [0, 1, 6, 7]);
+  assert.deepStrictEqual(r.distance, [1, 1, 0, 0, 0, 0, 1, 1, 0]);
+
+  var random = rng(11);
+  for (var i = 0; i < 100; i++) {
+    var x = S.randomBoard(4, 4, random);
+    assert.strictEqual(S.heuristicBreakdown(x, 4, 4).total, S.heuristicValue('conflict', x, 4, 4));
+  }
+});
+
+test('search with weight 1 finds shortest routes for every admissible heuristic', function () {
+  var dist = distances(3, 3), random = rng(21), expanded = {};
+  HEURISTIC_NAMES.forEach(function (name) { expanded[name] = 0; });
+  for (var i = 0; i < 25; i++) {
+    var b = S.randomBoard(3, 3, random), want = dist.get(b.join());
+    HEURISTIC_NAMES.forEach(function (name) {
+      var r = S.search(b, 3, 3, { heuristic: name, weight: 1 });
+      assert.strictEqual(r.moves.length, want, name + ' on ' + b.join());
+      replay(b, r.moves, 3, 3);
+      expanded[name] += r.nodes;
+    });
+  }
+  // Better estimates mean fewer positions looked at, summed over the sample.
+  assert(expanded.none > expanded.misplaced, JSON.stringify(expanded));
+  assert(expanded.misplaced > expanded.manhattan, JSON.stringify(expanded));
+  assert(expanded.manhattan > expanded.conflict, JSON.stringify(expanded));
+});
+
+test('weighted search stays within weight x shortest, and looks at fewer positions', function () {
+  var dist = distances(3, 3), random = rng(33), exact = 0, weighted = 0;
+  for (var i = 0; i < 25; i++) {
+    var b = S.randomBoard(3, 3, random), want = dist.get(b.join());
+    var a = S.search(b, 3, 3, { weight: 1 }), w = S.search(b, 3, 3, { weight: 3 });
+    assert(w.moves.length <= 3 * want, 'w = 3 broke its bound on ' + b.join());
+    replay(b, w.moves, 3, 3);
+    exact += a.nodes;
+    weighted += w.nodes;
+  }
+  assert(weighted < exact, weighted + ' >= ' + exact);
+});
+
+test('search gives up at maxNodes', function () {
+  var b = [8, 6, 7, 2, 5, 4, 3, 0, 1];
+  assert.strictEqual(S.search(b, 3, 3, { heuristic: 'none', maxNodes: 50 }), null);
+});
+
+test('IDA* reports each pass, and the passes add up', function () {
+  var hardest = [8, 6, 7, 2, 5, 4, 3, 0, 1];
+  var r = S.solve(hardest, 3, 3, 'optimal');
+  assert.strictEqual(r.moves.length, 31);
+  var total = 0;
+  r.iterations.forEach(function (it, i) {
+    total += it.nodes;
+    if (i > 0) assert(it.bound > r.iterations[i - 1].bound, 'bounds must increase');
+  });
+  assert.strictEqual(total, r.nodes);
+  assert.strictEqual(r.iterations[r.iterations.length - 1].bound, 31);
+});
+
+/* ---------- grid search (the explainer's demo) ---------- */
+
+var GridSearch = require('./gridsearch');
+
+function gridBFS(cols, rows, walls, start, goal) {
+  var d = new Array(cols * rows).fill(-1), queue = [start];
+  d[start] = 0;
+  for (var q = 0; q < queue.length; q++) {
+    var i = queue[q], r = Math.floor(i / cols), c = i % cols, next = [];
+    if (r > 0) next.push(i - cols);
+    if (r < rows - 1) next.push(i + cols);
+    if (c > 0) next.push(i - 1);
+    if (c < cols - 1) next.push(i + 1);
+    next.forEach(function (n) {
+      if (!walls[n] && d[n] < 0) { d[n] = d[i] + 1; queue.push(n); }
+    });
+  }
+  return d[goal];
+}
+
+function gridRun(layout, weight) {
+  return GridSearch.create({ cols: GridSearch.COLS, rows: GridSearch.ROWS, walls: layout.walls,
+                             start: layout.start, goal: layout.goal, weight: weight }).run();
+}
+
+test('grid search: weights 0 and 1 find shortest paths, weight 1 expands no more', function () {
+  var cols = 12, rows = 8, random = rng(3), found = 0, none = 0;
+  for (var t = 0; t < 200; t++) {
+    var walls = new Uint8Array(cols * rows);
+    for (var i = 0; i < walls.length; i++) walls[i] = random() < 0.28 ? 1 : 0;
+    var start = 0, goal = cols * rows - 1;
+    walls[start] = walls[goal] = 0;
+    var want = gridBFS(cols, rows, walls, start, goal);
+    var run = function (w) {
+      return GridSearch.create({ cols: cols, rows: rows, walls: walls, start: start, goal: goal, weight: w }).run();
+    };
+    var dijkstra = run(0), astar = run(1);
+    if (want < 0) {
+      assert.strictEqual(dijkstra.status, 'none');
+      assert.strictEqual(astar.status, 'none');
+      none++;
+      continue;
+    }
+    found++;
+    assert.strictEqual(dijkstra.path.length - 1, want);
+    assert.strictEqual(astar.path.length - 1, want);
+    assert(astar.expanded <= dijkstra.expanded, 'A* expanded more than Dijkstra');
+    // A path is a chain of neighbouring, open cells from start to goal.
+    astar.path.forEach(function (cell, k) {
+      assert(!walls[cell]);
+      if (k > 0) {
+        var a = astar.path[k - 1], dr = Math.abs(Math.floor(cell / cols) - Math.floor(a / cols)),
+            dc = Math.abs((cell % cols) - (a % cols));
+        assert.strictEqual(dr + dc, 1);
+      }
+    });
+    var w3 = run(3);
+    assert(w3.path.length - 1 <= 3 * want, 'weight 3 broke its bound');
+  }
+  assert(found > 50 && none > 5, found + ' found, ' + none + ' unreachable');
+});
+
+test('grid search demo layouts show the trade-off between effort and route length', function () {
+  var open = GridSearch.layouts.open(), scatter = GridSearch.layouts.scatter();
+  assert.strictEqual(gridRun(open, 1).path.length - 1, 17);
+  assert(gridRun(open, 0).expanded > 10 * gridRun(open, 1).expanded);
+
+  var optimal = gridRun(scatter, 1), greedy = gridRun(scatter, 100);
+  assert.strictEqual(optimal.path.length - 1, 31);
+  assert(greedy.path.length > optimal.path.length, 'greedy should take a longer route here');
+  assert(greedy.expanded < optimal.expanded, 'greedy should look at fewer cells here');
+  assert(gridRun(scatter, 0).expanded > optimal.expanded);
+
+  var wall = GridSearch.layouts.wall();
+  assert.strictEqual(gridRun(wall, 1).status, 'found');
+});
+
+test('grid search: stepping one cell at a time matches running to the end', function () {
+  var layout = GridSearch.layouts.scatter();
+  var stepped = GridSearch.create({ cols: GridSearch.COLS, rows: GridSearch.ROWS, walls: layout.walls,
+                                    start: layout.start, goal: layout.goal, weight: 2 });
+  var steps = 0;
+  while (stepped.step()) steps++;
+  var whole = gridRun(layout, 2);
+  assert.deepStrictEqual(stepped.path, whole.path);
+  assert.strictEqual(stepped.expanded, whole.expanded);
+  assert.strictEqual(stepped.step(), false, 'a finished search stays finished');
+});
+
 console.log('\n' + passed + ' tests passed');
