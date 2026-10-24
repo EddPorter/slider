@@ -43,9 +43,9 @@
       <ol>
         <li><a href="#shrink">The big idea: shrink the puzzle</a></li>
         <li><a href="#one-tile">Placing one tile</a></li>
-        <li><a href="#trainer">Try it: a step-by-step trainer</a></li>
         <li><a href="#corner">The corner trick</a></li>
         <li><a href="#methods">Two methods: layer by layer and fringe</a></li>
+        <li><a href="#trainer">Try it: a step-by-step trainer</a></li>
         <li><a href="#length">How long are the routes?</a></li>
         <li><a href="#community">Records, communities and further reading</a></li>
         <li><a href="#pitfalls">Common pitfalls</a></li>
@@ -85,21 +85,6 @@
         swapping two tiles to “fix” a stubborn corner never works: it is exactly
         the kind of change that makes a board impossible.
       </p>
-      <p>
-        The order in which the lines are finished is a map of the method. Each
-        number below is the line in which that cell is finished. The two methods
-        are explained in <a href="#methods">section 5</a>.
-      </p>
-      <div class="widget maps">
-        <figure>
-          <div id="map-lbl"></div>
-          <figcaption>Layer by layer (LBL)</figcaption>
-        </figure>
-        <figure>
-          <div id="map-fringe"></div>
-          <figcaption>Fringe</figcaption>
-        </figure>
-      </div>
     </section>
 
     <!-- 2 -->
@@ -126,11 +111,99 @@
     </section>
 
     <!-- 3 -->
-    <section id="trainer">
-      <h2>3. Try it: a step-by-step trainer</h2>
+    <section id="corner">
+      <h2>3. The corner trick</h2>
       <p>
-        Shuffle a board and let the method solve it. <strong>Next move</strong>
-        makes one move, <strong>Next stage</strong> does a whole stage, and
+        Placing the tiles of a line one at a time works until the last two. Take
+        a top row, 1 2 3 4, with 1 and 2 already in place. Put 3 in its home and
+        then try to put 4 in its home beside it. For 4 to slide up into the
+        corner, the gap must be in the corner and 4 directly beneath it. But the
+        gap can only reach the corner by passing through 4’s cell or 3’s cell, so
+        one of them gets knocked out. There is no way round it, so the last two
+        tiles go in together:
+      </p>
+      <ol>
+        <li>Park the second-to-last tile (3) in the corner, where the <em>last</em>
+          tile (4) belongs.</li>
+        <li>Park the last tile (4) directly beneath it, one step in from the
+          edge.</li>
+        <li>Bring the gap round to the home of 3, the cell next to the corner.</li>
+        <li>Slide 3 across into its home, and then slide 4 up into the corner.
+          Both are home, and the gap is back inside the unfinished area.</li>
+      </ol>
+      <p>Here is a real example from a 4 × 4 board, with 3 and 4 outlined:</p>
+      <div class="widget"><div class="frames" id="frames-normal"></div></div>
+      <p>
+        The awkward case catches nearly every beginner. Suppose 4 is already in
+        the corner, so it is tempting to leave it, but 3 is somewhere else.
+        Leaving 4 there means 3 can only be slotted in by disturbing it. The
+        answer is to knock 4 out on purpose and bring the pair in together. Here
+        the first stage below takes many moves to do that:
+      </p>
+      <div class="widget"><div class="frames" id="frames-awkward"></div></div>
+      <p>
+        A person memorises a fixed sequence of moves for this case. The program
+        behind this page finds the sequence by searching, as it does for every
+        tile. The stages are the same.
+      </p>
+    </section>
+
+    <!-- 4 -->
+    <section id="methods">
+      <h2>4. Two methods: layer by layer and fringe</h2>
+      <p>
+        The corner trick needs room to work, which is why you stop reducing at a
+        2 × 2 block rather than a 1 × 1. The
+        <a href="https://www.speedsolving.com/wiki/index.php/15_puzzle">15 puzzle
+        page on the Speedsolving.com wiki</a> names two ways of getting down
+        there:
+      </p>
+      <ul>
+        <li><strong>Layer by layer (LBL).</strong> Finish whole rows from the
+          top, one after another, until two rows are left. Then switch: finish the
+          left column of those two rows (two tiles, so the corner trick applies
+          directly), then the next, and so on until a 2 × 2 remains. The wiki
+          calls it one of the easiest methods to come up with, and the one most
+          used by people who are not speedsolvers.</li>
+        <li><strong>Fringe.</strong> Finish the outer edge, the top row and the
+          left column, and the puzzle shrinks by one in each direction. Do it
+          again, and again, until a 2 × 2 remains. This is the “solve an
+          <var>n</var> × <var>n</var> puzzle by reducing it to an
+          (<var>n</var>−1) × (<var>n</var>−1)” idea literally. The wiki rates it
+          roughly as fast as LBL. Computer scientists use the same group of
+          tiles, which they also call the fringe, as a pattern for heuristics
+          (see <a href="explain.html#next">pattern databases</a>).</li>
+      </ul>
+      <p>
+        Each number below is the line in which that cell is finished, on a
+        6 × 6 board.
+      </p>
+      <div class="widget maps">
+        <figure>
+          <div id="map-lbl"></div>
+          <figcaption>Layer by layer (LBL)</figcaption>
+        </figure>
+        <figure>
+          <div id="map-fringe"></div>
+          <figcaption>Fringe</figcaption>
+        </figure>
+      </div>
+      <p>
+        Both finish with the same 2 × 2 and use the same corner trick. They differ
+        only in the order in which lines are locked, which the maps show, and in
+        the length of the routes, which <a href="#length">section 6</a> measures.
+        On a 3 × 3 the two methods are identical. The trainer in the next section
+        runs either one.
+      </p>
+    </section>
+
+    <!-- 5 -->
+    <section id="trainer">
+      <h2>5. Try it: a step-by-step trainer</h2>
+      <p>
+        Shuffle a board and let a method solve it, choosing layer by layer or
+        fringe. <strong>Next move</strong> makes one move,
+        <strong>Next stage</strong> does a whole stage, and
         <strong>Play</strong> keeps going. Locked tiles are shaded green, and the
         tile or tiles being worked on are outlined. You can also take over at any
         point by sliding tiles yourself, and the trainer will plan afresh from
@@ -174,78 +247,6 @@
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- 4 -->
-    <section id="corner">
-      <h2>4. The corner trick</h2>
-      <p>
-        Placing the tiles of a line one at a time works until the last two. Take
-        a top row, 1 2 3 4, with 1 and 2 already in place. Put 3 in its home and
-        then try to put 4 in its home beside it. For 4 to slide up into the
-        corner, the gap must be in the corner and 4 directly beneath it. But the
-        gap can only reach the corner by passing through 4’s cell or 3’s cell, so
-        one of them gets knocked out. There is no way round it, so the last two
-        tiles go in together:
-      </p>
-      <ol>
-        <li>Park the second-to-last tile (3) in the corner, where the <em>last</em>
-          tile (4) belongs.</li>
-        <li>Park the last tile (4) directly beneath it, one step in from the
-          edge.</li>
-        <li>Bring the gap round to the home of 3, the cell next to the corner.</li>
-        <li>Slide 3 across into its home, and then slide 4 up into the corner.
-          Both are home, and the gap is back inside the unfinished area.</li>
-      </ol>
-      <p>Here is a real example from a 4 × 4 board, with 3 and 4 outlined:</p>
-      <div class="widget"><div class="frames" id="frames-normal"></div></div>
-      <p>
-        The awkward case catches nearly every beginner. Suppose 4 is already in
-        the corner, so it is tempting to leave it, but 3 is somewhere else.
-        Leaving 4 there means 3 can only be slotted in by disturbing it. The
-        answer is to knock 4 out on purpose and bring the pair in together. Here
-        the first stage below takes many moves to do that:
-      </p>
-      <div class="widget"><div class="frames" id="frames-awkward"></div></div>
-      <p>
-        A person memorises a fixed sequence of moves for this case. The program
-        behind this page finds the sequence by searching, as it does for every
-        tile. The stages are the same.
-      </p>
-    </section>
-
-    <!-- 5 -->
-    <section id="methods">
-      <h2>5. Two methods: layer by layer and fringe</h2>
-      <p>
-        The corner trick needs room to work, which is why you stop reducing at a
-        2 × 2 block rather than a 1 × 1. The
-        <a href="https://www.speedsolving.com/wiki/index.php/15_puzzle">15 puzzle
-        page on the Speedsolving.com wiki</a> names two ways of getting down
-        there:
-      </p>
-      <ul>
-        <li><strong>Layer by layer (LBL).</strong> Finish whole rows from the
-          top, one after another, until two rows are left. Then switch: finish the
-          left column of those two rows (two tiles, so the corner trick applies
-          directly), then the next, and so on until a 2 × 2 remains. The wiki
-          calls it one of the easiest methods to come up with, and the one most
-          used by people who are not speedsolvers.</li>
-        <li><strong>Fringe.</strong> Finish the outer edge, the top row and the
-          left column, and the puzzle shrinks by one in each direction. Do it
-          again, and again, until a 2 × 2 remains. This is the “solve an
-          <var>n</var> × <var>n</var> puzzle by reducing it to an
-          (<var>n</var>−1) × (<var>n</var>−1)” idea literally. The wiki rates it
-          roughly as fast as LBL. Computer scientists use the same group of
-          tiles, which they also call the fringe, as a pattern for heuristics
-          (see <a href="explain.html#next">pattern databases</a>).</li>
-      </ul>
-      <p>
-        Both finish with the same 2 × 2 and use the same corner trick. They differ
-        only in the order in which lines are locked, which you can see in the maps
-        in <a href="#shrink">section 1</a>, and in the length of the routes, which
-        is measured next. On a 3 × 3 the two methods are identical.
-      </p>
     </section>
 
     <!-- 6 -->
