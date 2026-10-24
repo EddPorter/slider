@@ -29,7 +29,7 @@ jobs:
       - name: Collect the site files
         run: |
           mkdir _site
-          cp index.html explain.html style.css learn.css app.js learn.js solver.js gridsearch.js worker.js _site/
+          cp index.html explain.html human.html style.css learn.css app.js learn.js human-page.js solver.js gridsearch.js human.js worker.js _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

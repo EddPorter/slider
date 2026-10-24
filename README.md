@@ -57,6 +57,12 @@ give each move, a grid where you can draw walls and watch A\* run with any
 weight, and a table that solves one board with every strategy side by side. It
 ends with references.
 
+[`human.html`](human.html) is the companion for people who want to solve the
+puzzle by hand. It teaches the layer-by-layer method, including the corner trick
+for the last two tiles of a line, with a trainer that solves a shuffled board
+one move or one stage at a time, and measures how long its routes are against the
+computer's.
+
 ## Layout
 
 | File | Purpose |
@@ -66,6 +72,8 @@ ends with references.
 | `app.js`, `index.html`, `style.css` | The puzzle interface. |
 | `explain.html`, `learn.js`, `learn.css` | The explainer page and its interactive demos. |
 | `gridsearch.js` | A\* on a grid, one step at a time, for the explainer's demo. |
+| `human.html`, `human-page.js` | The page on solving by hand, and its trainer. |
+| `human.js` | The layer-by-layer method people use, as a program, with the stages it goes through. |
 | `test.js` | Tests. Run with `node test.js`. |
 
 The tests check the solvability rule against exhaustive breadth-first search on
@@ -74,7 +82,8 @@ breadth-first search on 2 × 3 and 3 × 3 boards, including the hardest 3 × 3
 positions, which take 31 moves. They also check that none of the four heuristics
 ever overestimates on any of the 181,440 positions of a 3 × 3 board, that
 weighted search stays within its guaranteed bound, and that the grid search finds
-shortest routes.
+shortest routes. The human method is checked against every solvable board up to
+3 × 3 and thousands of larger and rectangular ones.
 
 ## History
 
