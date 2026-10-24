@@ -41,7 +41,7 @@ main {
 }
 
 h1 {
-  margin: 0 0 1rem;
+  margin: 0 0 0.25rem;
   font-size: 1.75rem;
   letter-spacing: 0.02em;
 }
@@ -160,3 +160,6 @@ label:has(input:disabled) { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .tile { transition: none; }
 }
+
+.nav { margin: 0 0 1rem; font-size: 0.9rem; }
+.nav a { color: var(--accent); }

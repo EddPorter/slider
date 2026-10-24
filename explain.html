@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How Slider finds a route</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="learn.css">
+</head>
+<body>
+  <main class="article">
+    <p class="nav"><a href="index.html">← Back to the puzzle</a></p>
+
+    <h1>How Slider finds a route</h1>
+
+    <p class="lede">
+      The puzzle offers two ways to find a route: <em>Shortest</em> and
+      <em>Quick</em>. Neither is magic. Both are searches, and both are
+      variations on one famous idea called A* (“A-star”). This page builds up to
+      them one step at a time, with something to click on at each stage.
+    </p>
+
+    <aside class="summary">
+      <h2>In short</h2>
+      <ul>
+        <li><strong>Quick</strong> is <em>weighted A*</em>. It always works on the
+          position that looks most promising, but trusts its guess about the
+          distance remaining more than the distance already travelled. It is fast
+          and the route is good, though not always the shortest.</li>
+        <li><strong>Shortest</strong> is <em>IDA*</em>, a memory-frugal relative
+          of A*. It searches to a fixed depth, then deeper and deeper, so the
+          first route it finds cannot be beaten.</li>
+        <li>Both rely on a <em>heuristic</em>: a cheap estimate of how many moves
+          are left. A better estimate means far less searching.</li>
+      </ul>
+    </aside>
+
+    <nav class="toc" aria-label="Contents">
+      <ol>
+        <li><a href="#positions">A puzzle is a maze of positions</a></li>
+        <li><a href="#solvable">Can it be solved at all?</a></li>
+        <li><a href="#blind">Searching blindly</a></li>
+        <li><a href="#heuristics">Guessing how far is left</a></li>
+        <li><a href="#astar">A*: try the most promising position first</a></li>
+        <li><a href="#astar-puzzle">A* on the puzzle</a></li>
+        <li><a href="#quick">Quick: weighted A*</a></li>
+        <li><a href="#shortest">Shortest: IDA*</a></li>
+        <li><a href="#compare">All the strategies side by side</a></li>
+        <li><a href="#next">Where it stops, and what comes next</a></li>
+        <li><a href="#reading">Reading the code and further reading</a></li>
+      </ol>
+    </nav>
+
+    <noscript><p class="note">The interactive parts of this page need JavaScript.</p></noscript>
+
+    <!-- 1 -->
+    <section id="positions">
+      <h2>1. A puzzle is a maze of positions</h2>
+      <p>
+        Every arrangement of the tiles is a <em>position</em>. A move turns one
+        position into a neighbouring one. Solving the puzzle therefore means
+        finding a path from the position you have to the solved one, through a
+        maze whose corridors are moves. Computer scientists call such a maze a
+        <em>graph</em>, and finding a path through it a <em>search</em>.
+      </p>
+      <p>
+        The difficulty is the size of the maze. Only half of the possible
+        arrangements can be reached (the next section explains why), so a board
+        with <var>n</var> cells has <var>n</var>!&nbsp;÷&nbsp;2 positions:
+      </p>
+      <div class="widget">
+        <table class="data" id="state-table">
+          <thead>
+            <tr><th scope="col">Board</th><th scope="col">Reachable positions</th>
+                <th scope="col">Time to look at every one, at a million a second</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p>
+        A 3 × 3 board is trivial for a computer. A 4 × 4 is out of reach for
+        brute force, and the larger boards are hopeless without being clever,
+        which is the whole subject of this page.
+      </p>
+    </section>
+
+    <!-- 2 -->
+    <section id="solvable">
+      <h2>2. Can it be solved at all?</h2>
+      <p>
+        Exactly half of all arrangements can never reach the solved position.
+        There is a neat test. Read the tiles in order, ignoring the gap, and count
+        the <em>inversions</em>: pairs where a larger number comes before a
+        smaller one. On a board that is an odd number of cells wide, such as 3 × 3,
+        a position is solvable exactly when its inversion count is even.
+      </p>
+      <p>
+        The reason is that every move preserves that parity. Sliding a tile
+        sideways does not change the reading order at all. Sliding one up or down
+        makes it hop over two others on a 3 × 3 board, which changes the count by
+        an even number. The solved board has no inversions, so it can only ever
+        reach even ones. On boards with an even width the gap’s row has to be
+        included in the sum, but the idea is the same. It was worked out in
+        1879, when the 15 puzzle was a craze.<sup><a href="#ref-johnson">[1]</a></sup>
+      </p>
+      <p>
+        Try it. Swapping two tiles changes the inversion count by an odd
+        number, which is why the board below becomes impossible.
+      </p>
+      <div class="playground widget" data-features="solvable swap"></div>
+      <p>
+        Slider checks this before it searches. Without the check, an impossible
+        3 × 3 board would send the search through all 181,440 reachable positions
+        before it could admit defeat.
+      </p>
+    </section>
+
+    <!-- 3 -->
+    <section id="blind">
+      <h2>3. Searching blindly</h2>
+      <p>
+        The simplest search is <em>breadth-first</em>. Try every move from the
+        start. Then try every move from each of those positions, then from
+        theirs, and so on, widening one step at a time. The first time the solved
+        position turns up, you have found a shortest route, because every shorter
+        one has already been tried.
+      </p>
+      <p>
+        It is guaranteed, and it is hopelessly wasteful. It has no idea where the
+        goal is, so it explores in every direction equally. On the hardest 3 × 3
+        position, which needs 31 moves, it looks at 181,438 of the 181,440
+        possible positions. The comparison table <a href="#compare">further
+        down</a> shows this for yourself, and the grid in
+        <a href="#astar">section 5</a> shows it as a picture: set the weight to
+        0 and watch the search spread out like a ripple.
+      </p>
+    </section>
+
+    <!-- 4 -->
+    <section id="heuristics">
+      <h2>4. Guessing how far is left</h2>
+      <p>
+        The cure is to give the search some sense of direction. A
+        <em>heuristic</em>, written <var>h</var>, is a cheap estimate of how many
+        moves a position still needs. Three are used in this project, each smarter
+        than the last:
+      </p>
+      <ol>
+        <li><strong>Misplaced tiles.</strong> Count the tiles that are not in
+          their home cell. Each needs at least one move.</li>
+        <li><strong>Manhattan distance.</strong> For each tile, count the
+          squares between it and home, moving only along rows and columns (as a
+          taxi would in a city grid), and add them up. Each move shifts one tile
+          by one square, so this cannot fall by more than 1 per move.</li>
+        <li><strong>Linear conflicts.</strong> If two tiles both belong in the
+          row they are currently in, but are the wrong way round, they must pass
+          each other. That is impossible within the row, so one has to step out
+          and back in, costing at least two extra moves that Manhattan distance
+          did not count. The same goes for columns.<sup><a href="#ref-hansson">[2]</a></sup></li>
+      </ol>
+      <p>
+        All three share a vital property: they are <em>admissible</em>, meaning
+        they never overestimate. A heuristic that sometimes claimed “10 moves”
+        for a position that really needs 8 could lead a search to throw away the
+        best route. The tests in this repository check that none of the three
+        ever overestimates, on every one of the 181,440 positions of the 3 × 3
+        board.
+      </p>
+      <p>
+        Slide tiles below and watch the numbers. The small figure on each tile is
+        its Manhattan distance. Use the button to load a board with two linear
+        conflicts, which are outlined.
+      </p>
+      <div class="playground widget" data-features="distances breakdown conflict"></div>
+    </section>
+
+    <!-- 5 -->
+    <section id="astar">
+      <h2>5. A*: try the most promising position first</h2>
+      <p>
+        A* uses the heuristic to decide what to look at next. It keeps a
+        <em>frontier</em> of positions it has seen but not yet explored, and gives
+        each one a score:
+      </p>
+      <p class="formula"><var>f</var> = <var>g</var> + <var>h</var></p>
+      <p>
+        where <var>g</var> is how many moves it took to get there, which is known
+        exactly, and <var>h</var> is the heuristic’s guess at the moves still to
+        come. So <var>f</var> is the estimated length of the best route
+        <em>through</em> that position. Each step, A* takes the frontier position
+        with the lowest <var>f</var>. If it is the goal, it stops. Otherwise it
+        <em>expands</em> it: it adds its neighbours to the frontier and moves on.
+      </p>
+      <p>
+        Why is the answer shortest? Because <var>h</var> never overestimates, the
+        score of any position is at most the length of the best route through it.
+        When the goal comes to the front of the queue, every other position on the
+        frontier has a score at least as high, so none of them can lead to a
+        shorter route.<sup><a href="#ref-hart">[3]</a></sup>
+      </p>
+      <p>
+        The puzzle’s positions are hard to draw, so here is the same algorithm on
+        a grid, where positions are squares and moves are steps. The heuristic is
+        the number of steps to the goal if there were no walls. <strong>Draw
+        walls</strong> by dragging across the grid, <strong>drag S and G</strong>
+        to move the start and goal, and press <strong>Run</strong>. Pale squares
+        are the frontier; tinted squares have been expanded.
+      </p>
+
+      <div class="widget" id="grid-demo">
+        <div class="gd-controls">
+          <label>Layout
+            <select id="gd-layout">
+              <option value="scatter">Scattered obstacles</option>
+              <option value="wall">Wall with a gap</option>
+              <option value="open">Open field</option>
+            </select>
+          </label>
+          <label>Weight <var>w</var>
+            <input type="range" id="gd-weight" min="0" max="8" step="1" value="2">
+          </label>
+          <output id="gd-weight-label" class="weight-label"></output>
+        </div>
+        <div class="gd-buttons">
+          <button type="button" id="gd-step">Step</button>
+          <button type="button" id="gd-run">Run</button>
+          <button type="button" id="gd-reset">Reset</button>
+          <button type="button" id="gd-clear">Clear walls</button>
+          <button type="button" id="gd-random">Random walls</button>
+          <label class="inline">Speed
+            <select id="gd-speed">
+              <option value="slow">Slow</option>
+              <option value="medium" selected>Medium</option>
+              <option value="fast">Fast</option>
+              <option value="instant">Instant</option>
+            </select>
+          </label>
+        </div>
+        <canvas id="gd-canvas" role="img"
+                aria-label="A grid on which the search is drawn. Use the buttons and the layout menu to change it; the result is also described in the text below the grid."></canvas>
+        <p id="gd-status" class="status" aria-live="polite"></p>
+        <p id="gd-readout" class="readout">Point at a square to see its scores.</p>
+        <ul class="legend">
+          <li><span class="swatch frontier"></span> frontier</li>
+          <li><span class="swatch expanded"></span> expanded</li>
+          <li><span class="swatch route"></span> route</li>
+          <li><span class="swatch wall"></span> wall</li>
+        </ul>
+
+        <div class="gd-compare">
+          <button type="button" id="gd-compare">Compare all weights on this grid</button>
+          <table class="data" id="gd-table">
+            <thead>
+              <tr><th scope="col">Weight <var>w</var></th><th scope="col">Squares expanded</th>
+                  <th scope="col">Route length</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p>Things to try:</p>
+      <ul>
+        <li>At <var>w</var>&nbsp;=&nbsp;0 the goal is ignored and the search
+          ripples outwards in all directions. That is breadth-first search.</li>
+        <li>At <var>w</var>&nbsp;=&nbsp;1 you get A*: the search leans towards the
+          goal but still finds a shortest route. It expands far fewer squares.</li>
+        <li>Put a wall between the start and goal, and see A* walk up to it and
+          then fan out along it until it finds the gap.</li>
+        <li>When two squares have the same score, the one nearer the goal goes
+          first. That small rule makes a noticeable difference.</li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section id="astar-puzzle">
+      <h2>6. A* on the puzzle</h2>
+      <p>
+        On the puzzle, A* scores positions in exactly the same way. Below, the
+        boxes show every position you could move to next, with the score A* would
+        give each. Slide tiles by clicking either the board or a box.
+      </p>
+      <p>
+        Notice that each move changes <var>g</var> by +1 and the Manhattan part
+        of <var>h</var> by ±1, so <var>f</var> either stays level or rises by 2
+        (linear conflicts can add a little more). Moving a tile towards home keeps
+        <var>f</var> level; moving it away raises <var>f</var>. A route whose
+        <var>f</var> never rises is a shortest one, and A* is effectively hunting
+        for it.
+      </p>
+      <div class="playground widget" data-features="distances breakdown successors"></div>
+      <p>
+        The highlighted move has the lowest <var>f</var> of the options shown.
+        (Sliding the last tile back is marked as going back and is never
+        highlighted, because A* does not return to the position it came from.)
+        A* would try the highlighted move first, but it also remembers every
+        other position it has seen, and if the new ones turn out to be worse it
+        goes back to an older one. Try always following the highlight and you
+        will find it can wander. A* avoids that by choosing the best position
+        <em>anywhere</em> on its frontier, not just among the latest moves. That
+        memory is what makes it both exact and hungry for memory.
+      </p>
+    </section>
+
+    <!-- 7 -->
+    <section id="quick">
+      <h2>7. Quick: weighted A*</h2>
+      <p>
+        Weighted A* makes one change. It scores positions by
+      </p>
+      <p class="formula"><var>f</var> = <var>g</var> + <var>w</var> × <var>h</var></p>
+      <p>
+        with a weight <var>w</var> above 1. The guess now counts for more than
+        the distance already travelled, so the search dives towards the goal
+        rather than exploring evenly. The weight is the slider in the grid above.
+        As it rises, the search expands fewer squares and the route gets a little
+        longer, as <strong>Compare all weights</strong> shows.
+      </p>
+      <p>
+        There is a guarantee: if <var>h</var> is admissible, the route found is
+        never more than <var>w</var> times the shortest.<sup><a href="#ref-pohl">[4]</a></sup>
+        Real routes are usually much closer. In a sample of six random 4 × 4 boards from this project, with
+        <var>w</var>&nbsp;=&nbsp;3, routes came out 36 to 51 per cent longer than
+        the shortest, against a ceiling of 200 per cent.
+      </p>
+      <p>
+        Slider’s Quick mode picks <var>w</var> from the board size: 2 for a
+        3 × 3, 3 for a 4 × 4, 4 for a 5 × 5 and 6 for a 6 × 6. If a pass looks at
+        1.2 million positions without finding the goal, it gives up and starts
+        again with the weight doubled. That is why it reliably solves boards up to
+        6 × 6, and why it is not offered beyond that: it remembers every position
+        it has seen, which makes it slow on a 7 × 7 board and liable to exhaust
+        the memory of a browser tab on an 8 × 8.
+      </p>
+    </section>
+
+    <!-- 8 -->
+    <section id="shortest">
+      <h2>8. Shortest: IDA*</h2>
+      <p>
+        Plain A* has a weakness. It remembers every position it has seen, and on
+        a hard 4 × 4 that can run to billions. <em>Iterative-deepening A*</em>
+        (IDA*) keeps A*’s scoring but throws away its memory.<sup><a href="#ref-korf">[5]</a></sup>
+        It works in passes:
+      </p>
+      <ol>
+        <li>Set a limit equal to the heuristic’s estimate for the starting
+          position, which is a lower bound on the answer.</li>
+        <li>Search depth-first, following one route at a time and backing up when
+          a position’s score <var>f</var> exceeds the limit. Remember the
+          smallest score that went over.</li>
+        <li>If the goal was reached, stop: the route is shortest. Otherwise raise
+          the limit to that smallest score and go round again.</li>
+      </ol>
+      <p>
+        Each pass repeats the work of the last, but each also visits several times
+        more positions than the one before, so the final pass dominates and the
+        repetition costs little. The prize is that it only ever holds the current
+        route in memory, which is a few dozen positions rather than billions.
+        The table at the end of the next section shows the passes for a real board.
+      </p>
+      <p>
+        Slider’s version adds two refinements. It never undoes the move it has
+        just made, and it recalculates the linear-conflict score only for the one
+        row and the two columns (or the reverse) that a move disturbs, instead of
+        for the whole board.
+      </p>
+    </section>
+
+    <!-- 9 -->
+    <section id="compare">
+      <h2>9. All the strategies side by side</h2>
+      <p>
+        Here every strategy in this page solves the same 3 × 3 board. The key
+        number is how many positions each had to expand. The bars use a
+        logarithmic scale, because the differences are enormous.
+      </p>
+
+      <div class="widget" id="compare-widget">
+        <div class="cmp-top">
+          <div id="cmp-board" class="cmp-board" aria-label="The board being solved"></div>
+          <div class="cmp-buttons">
+            <button type="button" id="cmp-new">New random board</button>
+            <button type="button" id="cmp-hard">Hardest board (31 moves)</button>
+            <label>Weight for the weighted row
+              <input type="range" id="cmp-weight" min="1.5" max="10" step="0.5" value="3">
+              <output id="cmp-weight-label"></output>
+            </label>
+          </div>
+        </div>
+        <table class="data" id="cmp-table">
+          <thead>
+            <tr><th scope="col">Strategy</th>
+                <th scope="col">Positions expanded</th>
+                <th scope="col" class="bar-col"><span class="visually-hidden">Bar, logarithmic scale</span></th>
+                <th scope="col">Route</th>
+                <th scope="col">Against the shortest</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="cmp-ida" class="cmp-ida"></div>
+      </div>
+
+      <p>
+        What to notice. Each better estimate cuts the work dramatically, and on
+        the hardest board linear conflicts expand roughly 37 times fewer
+        positions than breadth-first search. The weighted rows expand a tiny
+        fraction as many, but may return a longer route. IDA* expands slightly
+        <em>more</em> positions than A* with the same heuristic, because it
+        revisits some, but it needs almost no memory to do so. Counts for IDA*
+        are positions visited across all of its passes.
+      </p>
+    </section>
+
+    <!-- 10 -->
+    <section id="next">
+      <h2>10. Where it stops, and what comes next</h2>
+      <p>
+        <em>Shortest</em> is only offered up to 4 × 4, because a hard 5 × 5 takes
+        far too long with these heuristics. <em>Quick</em> stops at 6 × 6 for the
+        memory reason above. Real solvers do much better, and the ideas are worth
+        knowing:
+      </p>
+      <ul>
+        <li><strong>Pattern databases.</strong> Solve a simplified puzzle, in
+          which only a handful of the tiles matter, once and for every
+          position, and store the exact distances. The result is a far sharper
+          heuristic than Manhattan distance. Combined with IDA*, it cut the
+          search on 15 puzzles more than a thousandfold.<sup><a href="#ref-culberson">[6]</a></sup>
+          Using several databases that do not share tiles, and adding their
+          answers, extended this to optimal solutions of random 24 puzzles.<sup><a href="#ref-korf-felner">[7]</a></sup></li>
+        <li><strong>Step-by-step methods.</strong> Humans solve large boards by
+          placing a row, then a column, then another row, never disturbing what
+          is already home. A program can do the same and finish any size in a
+          flash, but the route is long, often several times the shortest.</li>
+        <li><strong>Searching from both ends.</strong> Start one search from the
+          puzzle and another from the solved board, and stop when they meet.</li>
+      </ul>
+      <p>
+        The 15 puzzle’s hardest positions need 80 moves, which is the true
+        diameter of its maze. For the 3 × 3 it is 31, and the
+        <em>Hardest board</em> button above loads one such position.
+      </p>
+    </section>
+
+    <!-- 11 -->
+    <section id="reading">
+      <h2>11. Reading the code and further reading</h2>
+      <p>The algorithms on this page are all in the repository, and each file is
+        short enough to read in one sitting:</p>
+      <ul>
+        <li><a href="https://github.com/EddPorter/slider/blob/master/solver.js"><code>solver.js</code></a>:
+          the solvability test, the heuristics, IDA* (<code>solveOptimal</code>)
+          and weighted A* (<code>weightedAStar</code>).</li>
+        <li><a href="https://github.com/EddPorter/slider/blob/master/gridsearch.js"><code>gridsearch.js</code></a>:
+          the grid version above, written to be run one step at a time.</li>
+        <li><a href="https://github.com/EddPorter/slider/blob/master/test.js"><code>test.js</code></a>:
+          the tests, which check every claim here that can be checked. They
+          compare the solvers with exhaustive breadth-first search, and confirm
+          that no heuristic ever overestimates.</li>
+      </ul>
+
+      <h3>References</h3>
+      <ol class="refs">
+        <li id="ref-johnson">Wm. Woolsey Johnson and William E. Story, ‘Notes on
+          the “15” Puzzle’, <cite>American Journal of Mathematics</cite>, 2.4
+          (1879), 397–404.</li>
+        <!-- The volume and page numbers for Hansson, Mayer and Yung have not
+             been independently verified; check them before citing elsewhere. -->
+        <li id="ref-hansson">Othar Hansson, Andrew Mayer, and Moti Yung,
+          ‘Criticizing Solutions to Relaxed Models Yields Powerful Admissible
+          Heuristics’, <cite>Information Sciences</cite>, 63.3 (1992), 207–227.</li>
+        <li id="ref-hart">Peter E. Hart, Nils J. Nilsson, and Bertram Raphael, ‘A
+          Formal Basis for the Heuristic Determination of Minimum Cost Paths’,
+          <cite>IEEE Transactions on Systems Science and Cybernetics</cite>, 4.2
+          (1968), 100–107.</li>
+        <li id="ref-pohl">Ira Pohl, ‘Heuristic Search Viewed as Path Finding in a
+          Graph’, <cite>Artificial Intelligence</cite>, 1.3–4 (1970), 193–204.</li>
+        <li id="ref-korf">Richard E. Korf, ‘Depth-First Iterative-Deepening: An
+          Optimal Admissible Tree Search’, <cite>Artificial Intelligence</cite>,
+          27.1 (1985), 97–109.</li>
+        <li id="ref-culberson">Joseph C. Culberson and Jonathan Schaeffer,
+          ‘Pattern Databases’, <cite>Computational Intelligence</cite>, 14.3
+          (1998), 318–334.</li>
+        <li id="ref-korf-felner">Richard E. Korf and Ariel Felner, ‘Disjoint
+          Pattern Database Heuristics’, <cite>Artificial Intelligence</cite>,
+          134.1–2 (2002), 9–22.</li>
+      </ol>
+    </section>
+
+    <p class="nav"><a href="index.html">← Back to the puzzle</a></p>
+  </main>
+
+  <script src="solver.js"></script>
+  <script src="gridsearch.js"></script>
+  <script src="learn.js"></script>
+</body>
+</html>
