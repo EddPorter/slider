@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solving it by hand</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="learn.css">
+</head>
+<body>
+  <main class="article">
+    <p class="nav"><a href="index.html">← Back to the puzzle</a> · <a href="explain.html">How the computer does it →</a></p>
+
+    <h1>Solving it by hand</h1>
+
+    <p class="lede">
+      The searches on <a href="explain.html">the other page</a> suit a computer.
+      People solve sliding puzzles quite differently. They do not search. They
+      finish the puzzle in layers, a row or a column at a time, and never undo
+      what is already done. This page teaches that method, shows it working on a
+      board you can shuffle, and measures how much longer its routes are.
+    </p>
+
+    <aside class="summary">
+      <h2>In short</h2>
+      <ul>
+        <li>Finish the top row, then the left column, and lock them. What is left
+          is the same puzzle, one size smaller. Repeat down to a 2 × 2 block.</li>
+        <li>It works from the outside in. Solving a smaller puzzle in the middle
+          first and then growing outwards does not work.</li>
+        <li>The last two tiles of every line need a special manoeuvre, the
+          <em>corner trick</em>.</li>
+        <li>The routes are roughly twice as long as the shortest on a 4 × 4, but
+          the method never fails and needs no memory to speak of.</li>
+      </ul>
+    </aside>
+
+    <nav class="toc" aria-label="Contents">
+      <ol>
+        <li><a href="#shrink">The big idea: shrink the puzzle</a></li>
+        <li><a href="#one-tile">Placing one tile</a></li>
+        <li><a href="#trainer">Try it: a step-by-step trainer</a></li>
+        <li><a href="#corner">The corner trick</a></li>
+        <li><a href="#orders">Two ways to order the work</a></li>
+        <li><a href="#length">How long are the routes?</a></li>
+        <li><a href="#other">Other approaches</a></li>
+        <li><a href="#pitfalls">Common pitfalls</a></li>
+      </ol>
+    </nav>
+
+    <noscript><p class="note">The interactive parts of this page need JavaScript.</p></noscript>
+
+    <!-- 1 -->
+    <section id="shrink">
+      <h2>1. The big idea: shrink the puzzle</h2>
+      <p>
+        Suppose you have finished the top row of a 5 × 5 board, and you promise
+        never to touch those five tiles again. The rest of the board is a
+        4 × 5 puzzle, with the gap somewhere inside it. Finish its left column
+        and lock that too, and what remains is 4 × 4. It is exactly the same
+        kind of puzzle, only smaller. So you do the same again, and again, until
+        a 2 × 2 block is left. That is recursion, and each step is smaller than
+        the last.
+      </p>
+      <p>
+        It has to go from the outside in. It is tempting to solve a small puzzle
+        in the middle first and then grow outwards, but that fails for a good
+        reason. Once the middle is locked, the gap can only move in the ring of
+        cells around it, and that ring is one tile wide. Tiles in a ring one tile
+        wide can only go round in circles. They can never overtake one another, so
+        their order is fixed, and it will almost never be the right one. The
+        method works from the outside precisely because it always leaves a region
+        at least two cells wide to work in.
+      </p>
+      <p>
+        The final 2 × 2 is the exception, and a telling one. Its three tiles can
+        only circle round the gap, so their cyclic order never changes. Whether
+        they come out right was settled by the starting position. If they do not,
+        the board you began with could not be solved at all (see
+        <a href="explain.html#solvable">the test for this</a>). That is why
+        swapping two tiles to “fix” a stubborn corner never works: it is exactly
+        the kind of change that makes a board impossible.
+      </p>
+      <p>
+        The order in which the lines are finished is a map of the method. Each
+        number below is the line in which that cell is finished. The two orders
+        are explained in <a href="#orders">section 5</a>.
+      </p>
+      <div class="widget maps">
+        <figure>
+          <div id="map-rows"></div>
+          <figcaption>Rows, then column pairs</figcaption>
+        </figure>
+        <figure>
+          <div id="map-peel"></div>
+          <figcaption>Peel an L: a row, then a column</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section id="one-tile">
+      <h2>2. Placing one tile</h2>
+      <p>
+        Only the gap ever moves. A tile moves when the gap is next to it and it
+        slides in. So to bring a tile to a place, you walk the gap to the far side
+        of it and push.
+      </p>
+      <p>
+        If the gap is already in front of the tile, in the direction you want to
+        go, one move does it. If the gap is behind, it has to travel all the way
+        round the tile first, which takes several moves, typically about five
+        when there is room. So each square of distance a tile must travel costs
+        several moves, and a tile that must cross the board costs dozens. That is
+        why routes by this method are long, and why they grow quickly with the
+        size of the board.
+      </p>
+      <p>
+        The one rule is to <strong>keep the gap out of the finished area</strong>.
+        Route the gap round the locked tiles, never through them.
+      </p>
+    </section>
+
+    <!-- 3 -->
+    <section id="trainer">
+      <h2>3. Try it: a step-by-step trainer</h2>
+      <p>
+        Shuffle a board and let the method solve it. <strong>Next move</strong>
+        makes one move, <strong>Next stage</strong> does a whole stage, and
+        <strong>Play</strong> keeps going. Locked tiles are shaded green, and the
+        tile or tiles being worked on are outlined. You can also take over at any
+        point by sliding tiles yourself, and the trainer will plan afresh from
+        where you leave the board.
+      </p>
+
+      <div class="widget" id="trainer-widget">
+        <div class="tr-options">
+          <label>Size
+            <select id="tr-size">
+              <option value="3">3 × 3</option>
+              <option value="4" selected>4 × 4</option>
+              <option value="5">5 × 5</option>
+              <option value="6">6 × 6</option>
+            </select>
+          </label>
+          <label>Order
+            <select id="tr-method">
+              <option value="rows">Rows, then column pairs</option>
+              <option value="peel">Peel an L</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="tr-main">
+          <div class="tr-left">
+            <div id="tr-board" class="board" role="group" aria-label="Puzzle board"></div>
+            <div class="tr-buttons">
+              <button type="button" id="tr-shuffle">Shuffle</button>
+              <button type="button" id="tr-move">Next move</button>
+              <button type="button" id="tr-stage">Next stage</button>
+              <button type="button" id="tr-play">Play</button>
+            </div>
+          </div>
+          <div class="tr-right" aria-live="polite">
+            <p class="tr-count" id="tr-count"></p>
+            <h3 id="tr-title"></h3>
+            <p id="tr-detail"></p>
+            <p id="tr-sub" class="tr-sub"></p>
+            <ol class="layers" id="tr-layers"></ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="corner">
+      <h2>4. The corner trick</h2>
+      <p>
+        Placing the tiles of a line one at a time works until the last two. Take
+        a top row, 1 2 3 4, with 1 and 2 already in place. Put 3 in its home and
+        then try to put 4 in its home beside it. For 4 to slide up into the
+        corner, the gap must be in the corner and 4 directly beneath it. But the
+        gap can only reach the corner by passing through 4’s cell or 3’s cell, so
+        one of them gets knocked out. There is no way round it, so the last two
+        tiles go in together:
+      </p>
+      <ol>
+        <li>Park the second-to-last tile (3) in the corner, where the <em>last</em>
+          tile (4) belongs.</li>
+        <li>Park the last tile (4) directly beneath it, one step in from the
+          edge.</li>
+        <li>Bring the gap round to the home of 3, the cell next to the corner.</li>
+        <li>Slide 3 across into its home, and then slide 4 up into the corner.
+          Both are home, and the gap is back inside the unfinished area.</li>
+      </ol>
+      <p>Here is a real example from a 4 × 4 board, with 3 and 4 outlined:</p>
+      <div class="widget"><div class="frames" id="frames-normal"></div></div>
+      <p>
+        The awkward case catches nearly every beginner. Suppose 4 is already in
+        the corner, so it is tempting to leave it, but 3 is somewhere else.
+        Leaving 4 there means 3 can only be slotted in by disturbing it. The
+        answer is to knock 4 out on purpose and bring the pair in together. Here
+        the first stage below takes many moves to do that:
+      </p>
+      <div class="widget"><div class="frames" id="frames-awkward"></div></div>
+      <p>
+        A person memorises a fixed sequence of moves for this case. The program
+        behind this page finds one by searching, as it does for every tile, so the
+        particular moves it shows can differ from a book’s. The stages are the
+        same.
+      </p>
+    </section>
+
+    <!-- 5 -->
+    <section id="orders">
+      <h2>5. Two ways to order the work</h2>
+      <p>
+        The corner trick needs room to work, which is why you stop reducing at a
+        2 × 2 block rather than a 1 × 1. How you get down there can vary:
+      </p>
+      <ul>
+        <li><strong>Rows, then column pairs.</strong> The usual beginner’s order.
+          Finish whole rows from the top, one after another, until two rows are
+          left. Then switch: finish the left column of those two rows (two
+          tiles, so the corner trick applies directly), then the next, and so on
+          until a 2 × 2 remains.</li>
+        <li><strong>Peel an L.</strong> Finish a row, then a column, then a row,
+          then a column, so a square board shrinks by one in each direction every
+          time. This is the “solve an <var>n</var> × <var>n</var> puzzle by
+          reducing it to an (<var>n</var>−1) × (<var>n</var>−1)” idea literally.</li>
+      </ul>
+      <p>
+        Both finish with the same 2 × 2 and use the same corner trick. They differ
+        only in the order in which lines are locked, which you can see in the maps
+        in <a href="#shrink">section 1</a>, and in the length of the routes, which
+        is measured next. On a 3 × 3 the two orders are identical.
+      </p>
+    </section>
+
+    <!-- 6 -->
+    <section id="length">
+      <h2>6. How long are the routes?</h2>
+      <p>
+        Here the two human orders race against the computer on the same random
+        boards. <em>Quick</em> is the weighted A* from
+        <a href="explain.html#quick">the other page</a>; on a 3 × 3 the true
+        shortest route is also shown. The averages are the point, since any one
+        board can go either way.
+      </p>
+      <div class="widget" id="hc">
+        <div class="hc-controls">
+          <label>Board
+            <select id="hc-size">
+              <option value="3">3 × 3 (200 boards)</option>
+              <option value="4" selected>4 × 4 (100 boards)</option>
+              <option value="5">5 × 5 (40 boards)</option>
+              <option value="6">6 × 6 (12 boards, slower)</option>
+            </select>
+          </label>
+          <button type="button" id="hc-run">Run the comparison</button>
+          <span id="hc-progress" class="status" aria-live="polite"></span>
+        </div>
+        <table class="data" id="hc-table">
+          <thead>
+            <tr><th scope="col">Method</th>
+                <th scope="col" class="num">Average moves</th>
+                <th scope="col" class="num">Fewest</th>
+                <th scope="col" class="num">Most</th>
+                <th scope="col" class="num">Against Quick</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p>
+        The human methods come out at roughly twice the shortest on a 4 × 4, and
+        longer than Quick at every size. Peeling an L comes out a few per cent
+        shorter than rows on square boards from 4 × 4 upwards. The cost grows
+        quickly with the size of the board: on the boards this program was tried
+        on, the average route from 3 × 3 up to 8 × 8 grew a little faster than
+        the cube of the board’s side. A rise of about that order is no accident. A board has about <var>n</var>² tiles, each
+        must travel a distance of the order of <var>n</var>, and every square of
+        that distance costs a handful of moves.
+      </p>
+      <p>
+        Finding the <em>shortest</em> route on a large board is a different
+        matter. It is NP-hard, so no known method is guaranteed to find it fast.<sup><a href="#ref-ratner">[1]</a></sup>
+        That is why both people and computers settle for a good route, not the
+        best one, on large boards.
+      </p>
+    </section>
+
+    <!-- 7 -->
+    <section id="other">
+      <h2>7. Other approaches</h2>
+      <ul>
+        <li><strong>Computer search.</strong> A* and IDA* find the shortest route
+          on a small board, and weighted A* finds a good one on a larger board,
+          without any layers at all, as
+          <a href="explain.html">the other page</a> explains. They find routes
+          that no person would think of, and they need a computer.</li>
+        <li><strong>Faster methods.</strong> People who solve these puzzles
+          against the clock use more elaborate methods, which this page does not
+          cover. It describes the beginner’s method, because that is the one the
+          code implements and the one that always works.</li>
+      </ul>
+    </section>
+
+    <!-- 8 -->
+    <section id="pitfalls">
+      <h2>8. Common pitfalls</h2>
+      <ul>
+        <li><strong>Letting the gap wander into finished tiles.</strong> It is
+          the commonest mistake. Every tile you disturb has to be placed again.</li>
+        <li><strong>Placing the last two tiles of a line one at a time.</strong>
+          It will always knock the first one out. Use the corner trick.</li>
+        <li><strong>Leaving the last two rows or columns to chance.</strong> Do
+          them two tiles at a time. A mistake there cannot be mended at the end.</li>
+        <li><strong>Trying to swap two tiles.</strong> It cannot be done on its
+          own. If the last 2 × 2 will not come out, the starting board could not
+          be solved.</li>
+      </ul>
+
+      <h3>Reference</h3>
+      <ol class="refs">
+        <li id="ref-ratner">Daniel Ratner and Manfred Warmuth, ‘The (<var>n</var>²−1)-Puzzle
+          and Related Relocation Problems’, <cite>Journal of Symbolic
+          Computation</cite>, 10.2 (1990), 111–137.</li>
+      </ol>
+      <p>
+        The code is <a href="https://github.com/EddPorter/slider/blob/master/human.js"><code>human.js</code></a>,
+        and the tests that check it solves every solvable board up to 3 × 3,
+        and thousands of larger ones, are in
+        <a href="https://github.com/EddPorter/slider/blob/master/test.js"><code>test.js</code></a>.
+      </p>
+    </section>
+
+    <p class="nav"><a href="index.html">← Back to the puzzle</a> · <a href="explain.html">How the computer does it →</a></p>
+  </main>
+
+  <script src="solver.js"></script>
+  <script src="human.js"></script>
+  <script src="human-page.js"></script>
+</body>
+</html>

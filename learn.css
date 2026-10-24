@@ -222,3 +222,57 @@ button.succ:not(.best) .tag { color: var(--muted); font-weight: 400; }
   .bar-col { display: none; }
   table.data td.bar-cell { display: none; }
 }
+
+/* ---------- the "solving it by hand" page ---------- */
+
+.maps { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; }
+.maps figure, .frames figure { margin: 0; text-align: center; }
+.maps figure { flex: 1 1 12rem; max-width: 15rem; }
+figcaption { margin-top: 0.4rem; font-size: 0.85rem; color: var(--muted); }
+
+.omap { display: grid; gap: 2px; }
+.omap span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: hsl(calc(25 + 300 * var(--k) / var(--of)) 55% 78%);
+  color: #26231d;
+  border-radius: 3px;
+}
+@media (prefers-color-scheme: dark) {
+  .omap span { background: hsl(calc(25 + 300 * var(--k) / var(--of)) 40% 34%); color: #ece7db; }
+}
+
+.frames { display: flex; flex-wrap: wrap; gap: 1rem 1.25rem; justify-content: center; }
+.frames figure { flex: 0 1 8.5rem; }
+.frames .mini { margin: 0 auto; }
+
+.tr-options { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-bottom: 0.75rem; }
+.tr-main { display: grid; grid-template-columns: minmax(0, 21rem) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.tr-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.tr-count { margin: 0 0 0.25rem; font-size: 0.85rem; color: var(--muted); }
+.tr-right h3 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+.tr-right p { margin: 0 0 0.6rem; }
+.tr-sub { font-weight: 600; min-height: 1.5em; }
+
+.layers { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.75rem 0 0; padding: 0; list-style: none; }
+.layers li {
+  padding: 0.1rem 0.55rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+}
+.layers li.finished { background: var(--tile-home); color: var(--text); }
+.layers li.active { border-color: var(--accent); color: var(--text); font-weight: 700; }
+
+/* A tile that is finished and locked. */
+.board .tile.locked::before { background: var(--tile-home); border-color: color-mix(in srgb, var(--gd-start) 55%, var(--border)); }
+
+.hc-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; margin-bottom: 0.75rem; }
+
+@media (max-width: 34rem) {
+  .tr-main { grid-template-columns: minmax(0, 1fr); }
+}

@@ -329,4 +329,120 @@ test('grid search: stepping one cell at a time matches running to the end', func
   assert.strictEqual(stepped.step(), false, 'a finished search stays finished');
 });
 
+
+/* ---------- the human method ---------- */
+
+var Human = require('./human');
+
+// Plays a human-method solution and checks every move is legal and the board
+// ends solved. Returns the number of moves.
+function humanSolves(board, rows, cols, method) {
+  var r = Human.solve(board, rows, cols, method), b = board.slice();
+  r.moves.forEach(function (cell) {
+    b = S.applyMove(b, cell, rows, cols);
+    assert(b, 'illegal move ' + cell + ' on ' + board.join());
+  });
+  assert(S.isSolved(b), 'not solved: ' + board.join());
+  return r.moves.length;
+}
+
+[[2, 2], [2, 3], [3, 2], [2, 4], [4, 2]].forEach(function (size) {
+  test('human method solves every solvable ' + size[0] + 'x' + size[1] + ' board, in both orders', function () {
+    var count = 0;
+    permutations(S.goalBoard(size[0], size[1])).forEach(function (p) {
+      if (!S.isSolvable(p, size[0], size[1])) return;
+      humanSolves(p, size[0], size[1], 'rows');
+      humanSolves(p, size[0], size[1], 'peel');
+      count++;
+    });
+    assert(count > 0);
+  });
+});
+
+test('human method solves every solvable 3x3 board (181,440), and both orders agree there', function () {
+  var count = 0, sampler = rng(2);
+  distances(3, 3).forEach(function (d, key) {
+    var b = key.split(',').map(Number);
+    humanSolves(b, 3, 3, 'rows');
+    if (sampler() < 0.01) {
+      assert.deepStrictEqual(Human.solve(b, 3, 3, 'rows').moves, Human.solve(b, 3, 3, 'peel').moves);
+    }
+    count++;
+  });
+  assert.strictEqual(count, 181440);
+});
+
+test('human method solves random boards of many shapes, in both orders', function () {
+  var random = rng(77);
+  [[3, 4], [4, 3], [2, 6], [6, 2], [2, 9], [7, 3], [4, 4], [5, 5], [6, 6], [8, 8]].forEach(function (size) {
+    var runs = size[0] * size[1] <= 25 ? 300 : 60;
+    for (var i = 0; i < runs; i++) {
+      var b = S.randomBoard(size[0], size[1], random);
+      humanSolves(b, size[0], size[1], 'rows');
+      humanSolves(b, size[0], size[1], 'peel');
+    }
+  });
+});
+
+test('human method refuses an unsolvable board', function () {
+  var b = S.goalBoard(4, 4);
+  b[13] = 15; b[14] = 14;
+  assert.throws(function () { Human.solve(b, 4, 4, 'rows'); }, /cannot be solved/);
+});
+
+test('human stages cover every move once, in order, and lock more cells as they go', function () {
+  var random = rng(8);
+  [[4, 4, 'rows'], [4, 4, 'peel'], [5, 3, 'rows'], [3, 5, 'peel']].forEach(function (c) {
+    var b = S.randomBoard(c[0], c[1], random), r = Human.solve(b, c[0], c[1], c[2]), at = 0;
+    r.stages.forEach(function (stage) {
+      assert.strictEqual(stage.start, at, 'stages must be contiguous');
+      assert(stage.end > stage.start);
+      at = stage.end;
+      stage.lockedBefore.forEach(function (cell) { assert(stage.lockedAfter.indexOf(cell) >= 0); });
+      assert(stage.lockedAfter.length > stage.lockedBefore.length);
+      if (stage.substeps) {
+        assert.strictEqual(stage.substeps[0].start, stage.start);
+        assert.strictEqual(stage.substeps[stage.substeps.length - 1].end, stage.end);
+      }
+    });
+    assert.strictEqual(at, r.moves.length, 'stages must cover every move');
+    assert(r.order.every(function (k) { return k >= 1; }), 'every cell belongs to a line');
+  });
+});
+
+test('human orders: rows then column pairs, or peel an L', function () {
+  var rows = Human.solve(S.goalBoard(5, 5), 5, 5, 'rows').order;
+  var peel = Human.solve(S.goalBoard(5, 5), 5, 5, 'peel').order;
+  // Rows: the first three lines are whole rows, then two column pairs, then 2 x 2.
+  assert.deepStrictEqual(rows, [1,1,1,1,1, 2,2,2,2,2, 3,3,3,3,3, 4,5,6,7,7, 4,5,6,7,7]);
+  // Peel: a row, a column, a row, a column, then 2 x 2.
+  assert.deepStrictEqual(peel, [1,1,1,1,1, 2,3,3,3,3, 2,4,5,5,5, 2,4,6,7,7, 2,4,6,7,7]);
+});
+
+test('peeling an L is shorter on average than rows on 5x5 boards, as the page says', function () {
+  var random = rng(123), rows = 0, peel = 0, runs = 300;
+  for (var i = 0; i < runs; i++) {
+    var b = S.randomBoard(5, 5, random);
+    rows += Human.solve(b, 5, 5, 'rows').moves.length;
+    peel += Human.solve(b, 5, 5, 'peel').moves.length;
+  }
+  assert(peel < rows, 'peel ' + peel / runs + ' vs rows ' + rows / runs);
+});
+
+test('the two boards shown on the human page demonstrate what the page says they do', function () {
+  // Keep these in step with ORDINARY and AWKWARD in human-page.js.
+  var ordinary = [3, 10, 5, 14, 12, 1, 4, 8, 7, 13, 15, 11, 9, 0, 2, 6];
+  var awkward = [0, 8, 1, 2, 7, 13, 10, 4, 11, 9, 14, 15, 6, 3, 12, 5];
+  function pairStage(board) {
+    var r = Human.solve(board, 4, 4, 'rows');
+    return r.stages.filter(function (st) { return st.layer === 'Row 1' && st.tiles.length === 2; })[0];
+  }
+  var a = pairStage(ordinary), b = pairStage(awkward);
+  assert.strictEqual(a.substeps.length, 4, 'ordinary: park, park, bring the gap, slide');
+  assert.deepStrictEqual(a.substeps.map(function (s) { return s.end - s.start; }), [4, 9, 1, 2]);
+  assert.strictEqual(b.substeps.length, 3, 'awkward: untangle, bring the gap, slide');
+  assert(/in each other/.test(b.substeps[0].label));
+  assert.deepStrictEqual(b.substeps.map(function (s) { return s.end - s.start; }), [19, 1, 2]);
+});
+
 console.log('\n' + passed + ' tests passed');
