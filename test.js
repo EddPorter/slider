@@ -445,4 +445,29 @@ test('the two boards shown on the human page demonstrate what the page says they
   assert.deepStrictEqual(b.substeps.map(function (s) { return s.end - s.start; }), [19, 1, 2]);
 });
 
+
+/* ---------- the pages themselves ---------- */
+
+test('every in-page link on the explainer and human pages points at an element that exists', function () {
+  var fs = require('fs');
+  ['explain.html', 'human.html'].forEach(function (file) {
+    var html = fs.readFileSync(__dirname + '/' + file, 'utf8');
+    var ids = {};
+    html.replace(/\bid="([^"]+)"/g, function (m, id) { ids[id] = true; });
+    var missing = [];
+    html.replace(/href="#([^"]+)"/g, function (m, id) { if (!ids[id]) missing.push(id); });
+    assert.deepStrictEqual(missing, [], file + ' links to missing ids');
+  });
+});
+
+test('links between the pages point at files that exist', function () {
+  var fs = require('fs');
+  ['index.html', 'explain.html', 'human.html'].forEach(function (file) {
+    var html = fs.readFileSync(__dirname + '/' + file, 'utf8');
+    html.replace(/(?:href|src)="([a-z-]+\.(?:html|js|css))(?:#[^"]*)?"/g, function (m, target) {
+      assert(fs.existsSync(__dirname + '/' + target), file + ' refers to missing ' + target);
+    });
+  });
+});
+
 console.log('\n' + passed + ' tests passed');
