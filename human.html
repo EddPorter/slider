@@ -18,15 +18,18 @@
       The searches on <a href="explain.html">the other page</a> suit a computer.
       People solve sliding puzzles quite differently. They do not search. They
       finish the puzzle in layers, a row or a column at a time, and never undo
-      what is already done. This page teaches that method, shows it working on a
-      board you can shuffle, and measures how much longer its routes are.
+      what is already done. The two standard methods are <em>layer by layer</em>
+      (LBL) and <em>fringe</em>. This page teaches both, shows them working on a
+      board you can shuffle, and measures how much longer their routes are.
     </p>
 
     <aside class="summary">
       <h2>In short</h2>
       <ul>
-        <li>Finish the top row, then the left column, and lock them. What is left
-          is the same puzzle, one size smaller. Repeat down to a 2 × 2 block.</li>
+        <li>Finish a row or a column and lock it. What is left is the same
+          puzzle, one size smaller. Repeat down to a 2 × 2 block.</li>
+        <li>Layer by layer and fringe differ only in the order the lines are
+          finished.</li>
         <li>It works from the outside in. Solving a smaller puzzle in the middle
           first and then growing outwards does not work.</li>
         <li>The last two tiles of every line need a special manoeuvre, the
@@ -42,10 +45,9 @@
         <li><a href="#one-tile">Placing one tile</a></li>
         <li><a href="#trainer">Try it: a step-by-step trainer</a></li>
         <li><a href="#corner">The corner trick</a></li>
-        <li><a href="#orders">Two ways to order the work</a></li>
+        <li><a href="#methods">Two methods: layer by layer and fringe</a></li>
         <li><a href="#length">How long are the routes?</a></li>
-        <li><a href="#other">Other approaches</a></li>
-        <li><a href="#fast">Faster methods, records and communities</a></li>
+        <li><a href="#community">Records, communities and further reading</a></li>
         <li><a href="#pitfalls">Common pitfalls</a></li>
       </ol>
     </nav>
@@ -85,17 +87,17 @@
       </p>
       <p>
         The order in which the lines are finished is a map of the method. Each
-        number below is the line in which that cell is finished. The two orders
-        are explained in <a href="#orders">section 5</a>.
+        number below is the line in which that cell is finished. The two methods
+        are explained in <a href="#methods">section 5</a>.
       </p>
       <div class="widget maps">
         <figure>
-          <div id="map-rows"></div>
-          <figcaption>Rows, then column pairs</figcaption>
+          <div id="map-lbl"></div>
+          <figcaption>Layer by layer (LBL)</figcaption>
         </figure>
         <figure>
-          <div id="map-peel"></div>
-          <figcaption>Peel an L: a row, then a column</figcaption>
+          <div id="map-fringe"></div>
+          <figcaption>Fringe</figcaption>
         </figure>
       </div>
     </section>
@@ -145,10 +147,10 @@
               <option value="6">6 × 6</option>
             </select>
           </label>
-          <label>Order
+          <label>Method
             <select id="tr-method">
-              <option value="rows">Rows, then column pairs</option>
-              <option value="peel">Peel an L</option>
+              <option value="lbl">Layer by layer (LBL)</option>
+              <option value="fringe">Fringe</option>
             </select>
           </label>
         </div>
@@ -207,35 +209,42 @@
       <div class="widget"><div class="frames" id="frames-awkward"></div></div>
       <p>
         A person memorises a fixed sequence of moves for this case. The program
-        behind this page finds one by searching, as it does for every tile, so the
-        particular moves it shows can differ from a book’s. The stages are the
-        same.
+        behind this page finds the sequence by searching, as it does for every
+        tile. The stages are the same.
       </p>
     </section>
 
     <!-- 5 -->
-    <section id="orders">
-      <h2>5. Two ways to order the work</h2>
+    <section id="methods">
+      <h2>5. Two methods: layer by layer and fringe</h2>
       <p>
         The corner trick needs room to work, which is why you stop reducing at a
-        2 × 2 block rather than a 1 × 1. How you get down there can vary:
+        2 × 2 block rather than a 1 × 1. The
+        <a href="https://www.speedsolving.com/wiki/index.php/15_puzzle">15 puzzle
+        page on the Speedsolving.com wiki</a> names two ways of getting down
+        there:
       </p>
       <ul>
-        <li><strong>Rows, then column pairs.</strong> The usual beginner’s order.
-          Finish whole rows from the top, one after another, until two rows are
-          left. Then switch: finish the left column of those two rows (two
-          tiles, so the corner trick applies directly), then the next, and so on
-          until a 2 × 2 remains.</li>
-        <li><strong>Peel an L.</strong> Finish a row, then a column, then a row,
-          then a column, so a square board shrinks by one in each direction every
-          time. This is the “solve an <var>n</var> × <var>n</var> puzzle by
-          reducing it to an (<var>n</var>−1) × (<var>n</var>−1)” idea literally.</li>
+        <li><strong>Layer by layer (LBL).</strong> Finish whole rows from the
+          top, one after another, until two rows are left. Then switch: finish the
+          left column of those two rows (two tiles, so the corner trick applies
+          directly), then the next, and so on until a 2 × 2 remains. The wiki
+          calls it one of the easiest methods to come up with, and the one most
+          used by people who are not speedsolvers.</li>
+        <li><strong>Fringe.</strong> Finish the outer edge, the top row and the
+          left column, and the puzzle shrinks by one in each direction. Do it
+          again, and again, until a 2 × 2 remains. This is the “solve an
+          <var>n</var> × <var>n</var> puzzle by reducing it to an
+          (<var>n</var>−1) × (<var>n</var>−1)” idea literally. The wiki rates it
+          roughly as fast as LBL. Computer scientists use the same group of
+          tiles, which they also call the fringe, as a pattern for heuristics
+          (see <a href="explain.html#next">pattern databases</a>).</li>
       </ul>
       <p>
         Both finish with the same 2 × 2 and use the same corner trick. They differ
         only in the order in which lines are locked, which you can see in the maps
         in <a href="#shrink">section 1</a>, and in the length of the routes, which
-        is measured next. On a 3 × 3 the two orders are identical.
+        is measured next. On a 3 × 3 the two methods are identical.
       </p>
     </section>
 
@@ -243,7 +252,7 @@
     <section id="length">
       <h2>6. How long are the routes?</h2>
       <p>
-        Here the two human orders race against the computer on the same random
+        Here the two methods race against the computer on the same random
         boards. <em>Quick</em> is the weighted A* from
         <a href="explain.html#quick">the other page</a>; on a 3 × 3 the true
         shortest route is also shown. The averages are the point, since any one
@@ -275,137 +284,72 @@
       </div>
       <p>
         The human methods come out at roughly twice the shortest on a 4 × 4, and
-        longer than Quick at every size. Peeling an L comes out a few per cent
-        shorter than rows on square boards from 4 × 4 upwards. The cost grows
+        longer than Quick at every size. Fringe comes out a few per cent shorter
+        than LBL on square boards from 4 × 4 upwards, which fits the wiki’s
+        verdict that the two are about as fast as each other. The cost grows
         quickly with the size of the board: on the boards this program was tried
         on, the average route from 3 × 3 up to 8 × 8 grew a little faster than
-        the cube of the board’s side. A rise of about that order is no accident. A board has about <var>n</var>² tiles, each
-        must travel a distance of the order of <var>n</var>, and every square of
-        that distance costs a handful of moves.
+        the cube of the board’s side. A rise of about that order is no accident.
+        A board has about <var>n</var>² tiles, each must travel a distance of the
+        order of <var>n</var>, and every square of that distance costs a handful
+        of moves.
       </p>
       <p>
         Finding the <em>shortest</em> route on a large board is a different
         matter. It is NP-hard, so no known method is guaranteed to find it fast.<sup><a href="#ref-ratner">[1]</a></sup>
         That is why both people and computers settle for a good route, not the
-        best one, on large boards.
+        best one, on large boards. Computers search without layers at all: A* and
+        IDA* find the shortest route on a small board, and weighted A* finds a
+        good one on a larger board, as
+        <a href="explain.html">the other page</a> explains.
       </p>
     </section>
 
     <!-- 7 -->
-    <section id="other">
-      <h2>7. Other approaches</h2>
+    <section id="community">
+      <h2>7. Records, communities and further reading</h2>
+      <p>
+        Sliding puzzles have an active community of speedsolvers, with a wiki,
+        forums, a simulator and records.
+      </p>
       <ul>
-        <li><strong>Computer search.</strong> A* and IDA* find the shortest route
-          on a small board, and weighted A* finds a good one on a larger board,
-          without any layers at all, as
-          <a href="explain.html">the other page</a> explains. They find routes
-          that no person would think of, and they need a computer.</li>
-        <li><strong>Faster methods.</strong> People do solve these puzzles
-          against the clock. <a href="#fast">The next section</a> sets out what
-          is known about their methods, and where they compete.</li>
+        <li><strong>Speedsolving.com.</strong> The wiki’s
+          <a href="https://www.speedsolving.com/wiki/index.php/15_puzzle">15
+          puzzle</a> page describes layer by layer and fringe, and its
+          <a href="https://www.speedsolving.com/wiki/index.php/List_of_Unofficial_World_Records">list
+          of unofficial world records</a> includes sliding puzzles. On the forum,
+          see the
+          <a href="https://www.speedsolving.com/threads/15-puzzle-discussion.31444/">15
+          Puzzle Discussion</a> and
+          <a href="https://www.speedsolving.com/threads/slidy-puzzles-accomplishment-thread.45292/latest">Slidy
+          Puzzles Accomplishment Thread</a>.</li>
+        <li><strong>SlidySim.</strong> A simulator for competitive sliding-puzzle
+          solving. Its community
+          <a href="https://slidysim.github.io/lb">leaderboard</a> ranks solvers
+          across categories that include relays and marathons, and
+          <a href="https://github.com/dphdmn/openslidy">openslidy</a> is an open,
+          community-driven leaderboard.</li>
+        <li><strong>Guinness World Records.</strong> The record for the
+          <a href="https://www.guinnessworldrecords.com/world-records/fastest-time-to-solve-10-fifteen-puzzles">fastest
+          time to solve ten 15 puzzles</a> is 1 minute 9.61 seconds, set by Lim
+          Kai Yi of Malaysia on 15 November 2024.</li>
+      </ul>
+
+      <h3>Further reading</h3>
+      <ul>
+        <li><a href="https://www.jaapsch.net/puzzles/fifteen.htm">Jaap’s Puzzle
+          Page: the 14–15 puzzle</a>.</li>
+        <li><a href="https://en.wikipedia.org/wiki/15_puzzle">15 puzzle</a>, on
+          Wikipedia.</li>
+        <li>Aaron F. Archer, <a href="https://www.cs.cmu.edu/afs/cs/academic/class/15859-f01/www/notes/15-puzzle.pdf">‘A
+          Modern Treatment of the 15 Puzzle’</a>, <cite>American Mathematical
+          Monthly</cite>, 106.9 (1999), 793–799: the mathematics of the puzzle.</li>
       </ul>
     </section>
 
     <!-- 8 -->
-    <section id="fast">
-      <h2>8. Faster methods, records and communities</h2>
-      <p>
-        There is a small community of people who solve sliding puzzles against
-        the clock. This section sets out what could be confirmed about their methods
-        and where they compete, with links so that you can read the originals.
-        Their pages change, so treat any figure here as a snapshot.
-      </p>
-      <!-- The descriptions below come from several web searches and the titles
-           of the pages linked. The pages themselves could not be opened when
-           this was written, so check them before relying on the details. -->
-
-      <h3>The methods have names</h3>
-      <p>
-        The <a href="https://www.speedsolving.com/wiki/index.php/15_puzzle">15
-        puzzle page on the Speedsolving.com wiki</a> describes two methods:
-      </p>
-      <ul>
-        <li><strong>Layer by layer (LBL).</strong> Solve a row, then another,
-          then the columns, finishing the last few pieces by feel. The wiki calls
-          it one of the easiest methods to come up with and the one most used by
-          people who are not speedsolvers. It is the <em>rows, then column
-          pairs</em> order described above.</li>
-        <li><strong>Fringe.</strong> Solve the outer edge first, the top row and
-          left column, and so shrink the puzzle step by step until a small block
-          is left to finish. The wiki says it is roughly as fast as LBL. It is
-          the <em>peel an L</em> order above. Computer scientists use the same
-          group of tiles, which they also call the fringe, as a pattern for
-          heuristics (see <a href="explain.html#next">pattern databases</a>).</li>
-      </ul>
-      <p>
-        That the wiki rates the two as about equally fast agrees with the
-        comparison in <a href="#length">section 6</a>, where the two orders came
-        out within a few per cent of each other. In the sources consulted, the
-        methods that speedsolvers name are these layered ones. None described a
-        different principle, and this page does not try to describe finer points
-        of technique that could not be confirmed.
-      </p>
-
-      <h3>Is there a championship?</h3>
-      <p>
-        No official one turned up. The World Cube Association, which runs
-        speedcubing championships, holds events for twisty puzzles, and sliding
-        puzzles are not among its listed events. What exists is informal:
-      </p>
-      <ul>
-        <li><strong>Community records.</strong> The Speedsolving.com wiki keeps a
-          <a href="https://www.speedsolving.com/wiki/index.php/List_of_Unofficial_World_Records">list
-          of unofficial world records</a> with a sliding-puzzle section, which it
-          credits to the community’s Discord server. Single solves of the 15
-          puzzle are timed in the region of a second or two there.</li>
-        <li><strong>A simulator and leaderboards.</strong> SlidySim is a
-          simulator used for competitive 15-puzzle solving. It supports boards
-          from 2 × 2 to 1000 × 1000, and it has multiplayer, relays and
-          marathons. The community runs leaderboards with replays at
-          <a href="https://slidysim.github.io/">slidysim.github.io</a> and
-          <a href="https://github.com/dphdmn/openslidy">openslidy</a>.
-          Simulator times for a single 15 puzzle are under a second.</li>
-        <li><strong>Guinness World Records.</strong> Guinness has a category for
-          the <a href="https://www.guinnessworldrecords.com/world-records/fastest-time-to-solve-10-fifteen-puzzles">fastest
-          time to solve ten 15 puzzles</a>. At the time of writing the record was
-          1 minute 9.61 seconds, set by Lim Kai Yi of Malaysia in November 2024,
-          but check the page for the current holder. It also lists records for
-          the <a href="https://www.guinnessworldrecords.com/world-records/528764-fastest-time-to-solve-a-4-x-4-klotski-puzzle">4 × 4
-          Klotski puzzle</a>, which is how the numbered 15 puzzle is known in
-          China, where it is called <em>digital Huarong Dao</em>.</li>
-      </ul>
-      <p>
-        There may be local events and communities that are not covered here.
-        If you know of one, it would be worth adding.
-      </p>
-
-      <h3>Resources</h3>
-      <ul>
-        <li><a href="https://www.speedsolving.com/wiki/index.php/15_puzzle">15
-          puzzle</a>, Speedsolving.com wiki: the named methods.</li>
-        <li><a href="https://www.speedsolving.com/threads/15-puzzle-discussion.31444/">15
-          Puzzle Discussion</a> and the
-          <a href="https://www.speedsolving.com/threads/slidy-puzzles-accomplishment-thread.45292/latest">Slidy
-          Puzzles Accomplishment Thread</a>, on the Speedsolving.com forum:
-          solvers comparing times and ways of solving.</li>
-        <li><a href="https://slidysim.github.io/">SlidySim Leaderboard</a>: the
-          simulator’s community rankings.</li>
-        <li><a href="https://www.jaapsch.net/puzzles/fifteen.htm">Jaap’s Puzzle
-          Page: 14–15 puzzle</a>: the history of the puzzle and the famous
-          unsolvable version.</li>
-        <li><a href="https://en.wikipedia.org/wiki/15_puzzle">15 puzzle</a>,
-          Wikipedia: an overview, including the proof that half of the positions
-          cannot be reached.</li>
-        <li>Aaron F. Archer, <a href="https://www.cs.cmu.edu/afs/cs/academic/class/15859-f01/www/notes/15-puzzle.pdf">‘A
-          Modern Treatment of the 15 Puzzle’</a>, <cite>American Mathematical
-          Monthly</cite>, 106.9 (1999), 793–799: the mathematics of which
-          positions can be solved.</li>
-      </ul>
-    </section>
-
-    <!-- 9 -->
     <section id="pitfalls">
-      <h2>9. Common pitfalls</h2>
+      <h2>8. Common pitfalls</h2>
       <ul>
         <li><strong>Letting the gap wander into finished tiles.</strong> It is
           the commonest mistake. Every tile you disturb has to be placed again.</li>
