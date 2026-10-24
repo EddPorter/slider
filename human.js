@@ -8,13 +8,14 @@
  * other, because the second would knock the first out, so they are placed
  * together using the "corner trick".
  *
- * Two orders are offered:
- *   'rows'  solve whole rows from the top until two rows remain, then solve the
- *           rest two tiles at a time, a column at a time (the usual beginner's
- *           method);
- *   'peel'  take a row, then a column, alternately, so a square board shrinks
- *           by one in each direction every time (solving an n x n puzzle by
- *           reducing it to an (n-1) x (n-1) one).
+ * Two methods are offered, under the names solvers use for them (see the
+ * Speedsolving.com wiki's 15 puzzle page):
+ *   'lbl'     layer by layer: solve whole rows from the top until two rows
+ *             remain, then solve the rest two tiles at a time, a column at a
+ *             time;
+ *   'fringe'  take the top row, then the left column, alternately, so a square
+ *             board shrinks by one in each direction every time (solving an
+ *             n x n puzzle by reducing it to an (n-1) x (n-1) one).
  *
  * A person memorises a short pattern of moves for each situation. This code
  * finds each tile's route with a tiny search over just the tile and the gap,
@@ -50,7 +51,7 @@
   //   order:  for each cell, the number of the line it was finished in (1, 2, ...)
   // Throws if the board cannot be solved.
   function solve(board, rows, cols, method) {
-    method = method || 'rows';
+    method = method || 'lbl';
     var n = rows * cols, b = board.slice(), nbrs = neighbourTable(rows, cols);
     var locked = new Uint8Array(n), moves = [], stages = [], order = new Array(n).fill(0);
     var free = { r0: 0, c0: 0, r1: rows - 1, c1: cols - 1 }, layer = 0;
@@ -231,7 +232,7 @@
     function freeCols() { return free.c1 - free.c0 + 1; }
 
     while (freeRows() > 2 || freeCols() > 2) {
-      if (method === 'peel') {
+      if (method === 'fringe') {
         if (freeRows() > 2) solveLine('row');
         if (freeCols() > 2) solveLine('col');
       } else if (freeRows() > 2) {

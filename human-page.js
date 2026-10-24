@@ -58,7 +58,7 @@
   // Shows a board at the start of the "last two tiles of the first row" stage
   // and after each of its sub-steps.
   function frames(container, board) {
-    var result = H.solve(board, 4, 4, 'rows');
+    var result = H.solve(board, 4, 4, 'lbl');
     var stage = result.stages.filter(function (s) { return s.layer === 'Row 1' && s.tiles.length === 2; })[0];
     if (!stage) return;
     var current = replay(board, result.moves.slice(0, stage.start), 4, 4);
@@ -240,7 +240,7 @@
     function render(series, size) {
       body.textContent = '';
       var quick = series.quick.length ? summarise(series.quick).average : null;
-      [['Rows, then column pairs', series.rows], ['Peel an L', series.peel],
+      [['Layer by layer (LBL)', series.lbl], ['Fringe', series.fringe],
        ['Quick (weighted A*)', series.quick], ['Shortest (IDA*)', series.shortest]].forEach(function (entry) {
         if (!entry[1].length) return;
         var s = summarise(entry[1]), tr = make('tr');
@@ -256,7 +256,7 @@
 
     function run() {
       var mine = ++token, size = Number(sizeSelect.value), total = COUNTS[size], done = 0;
-      var series = { rows: [], peel: [], quick: [], shortest: [] };
+      var series = { lbl: [], fringe: [], quick: [], shortest: [] };
       runButton.disabled = true;
 
       function next() {
@@ -267,8 +267,8 @@
           return;
         }
         var b = S.randomBoard(size, size);
-        series.rows.push(H.solve(b, size, size, 'rows').moves.length);
-        series.peel.push(H.solve(b, size, size, 'peel').moves.length);
+        series.lbl.push(H.solve(b, size, size, 'lbl').moves.length);
+        series.fringe.push(H.solve(b, size, size, 'fringe').moves.length);
         series.quick.push(S.solve(b, size, size, 'quick').moves.length);
         if (size === 3) series.shortest.push(S.solve(b, size, size, 'optimal').moves.length);
         done++;
@@ -288,8 +288,8 @@
   var ORDINARY = [3, 10, 5, 14, 12, 1, 4, 8, 7, 13, 15, 11, 9, 0, 2, 6];
   var AWKWARD = [0, 8, 1, 2, 7, 13, 10, 4, 11, 9, 14, 15, 6, 3, 12, 5];
 
-  orderMap($('#map-rows'), 6, 'rows');
-  orderMap($('#map-peel'), 6, 'peel');
+  orderMap($('#map-lbl'), 6, 'lbl');
+  orderMap($('#map-fringe'), 6, 'fringe');
   frames($('#frames-normal'), ORDINARY);
   frames($('#frames-awkward'), AWKWARD);
   Trainer();
