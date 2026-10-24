@@ -45,6 +45,7 @@
         <li><a href="#orders">Two ways to order the work</a></li>
         <li><a href="#length">How long are the routes?</a></li>
         <li><a href="#other">Other approaches</a></li>
+        <li><a href="#fast">Faster methods, records and communities</a></li>
         <li><a href="#pitfalls">Common pitfalls</a></li>
       </ol>
     </nav>
@@ -299,16 +300,112 @@
           without any layers at all, as
           <a href="explain.html">the other page</a> explains. They find routes
           that no person would think of, and they need a computer.</li>
-        <li><strong>Faster methods.</strong> People who solve these puzzles
-          against the clock use more elaborate methods, which this page does not
-          cover. It describes the beginner’s method, because that is the one the
-          code implements and the one that always works.</li>
+        <li><strong>Faster methods.</strong> People do solve these puzzles
+          against the clock. <a href="#fast">The next section</a> sets out what
+          is known about their methods, and where they compete.</li>
       </ul>
     </section>
 
     <!-- 8 -->
+    <section id="fast">
+      <h2>8. Faster methods, records and communities</h2>
+      <p>
+        There is a small community of people who solve sliding puzzles against
+        the clock. This section sets out what could be confirmed about their methods
+        and where they compete, with links so that you can read the originals.
+        Their pages change, so treat any figure here as a snapshot.
+      </p>
+      <!-- The descriptions below come from several web searches and the titles
+           of the pages linked. The pages themselves could not be opened when
+           this was written, so check them before relying on the details. -->
+
+      <h3>The methods have names</h3>
+      <p>
+        The <a href="https://www.speedsolving.com/wiki/index.php/15_puzzle">15
+        puzzle page on the Speedsolving.com wiki</a> describes two methods:
+      </p>
+      <ul>
+        <li><strong>Layer by layer (LBL).</strong> Solve a row, then another,
+          then the columns, finishing the last few pieces by feel. The wiki calls
+          it one of the easiest methods to come up with and the one most used by
+          people who are not speedsolvers. It is the <em>rows, then column
+          pairs</em> order described above.</li>
+        <li><strong>Fringe.</strong> Solve the outer edge first, the top row and
+          left column, and so shrink the puzzle step by step until a small block
+          is left to finish. The wiki says it is roughly as fast as LBL. It is
+          the <em>peel an L</em> order above. Computer scientists use the same
+          group of tiles, which they also call the fringe, as a pattern for
+          heuristics (see <a href="explain.html#next">pattern databases</a>).</li>
+      </ul>
+      <p>
+        That the wiki rates the two as about equally fast agrees with the
+        comparison in <a href="#length">section 6</a>, where the two orders came
+        out within a few per cent of each other. In the sources consulted, the
+        methods that speedsolvers name are these layered ones. None described a
+        different principle, and this page does not try to describe finer points
+        of technique that could not be confirmed.
+      </p>
+
+      <h3>Is there a championship?</h3>
+      <p>
+        No official one turned up. The World Cube Association, which runs
+        speedcubing championships, holds events for twisty puzzles, and sliding
+        puzzles are not among its listed events. What exists is informal:
+      </p>
+      <ul>
+        <li><strong>Community records.</strong> The Speedsolving.com wiki keeps a
+          <a href="https://www.speedsolving.com/wiki/index.php/List_of_Unofficial_World_Records">list
+          of unofficial world records</a> with a sliding-puzzle section, which it
+          credits to the community’s Discord server. Single solves of the 15
+          puzzle are timed in the region of a second or two there.</li>
+        <li><strong>A simulator and leaderboards.</strong> SlidySim is a
+          simulator used for competitive 15-puzzle solving. It supports boards
+          from 2 × 2 to 1000 × 1000, and it has multiplayer, relays and
+          marathons. The community runs leaderboards with replays at
+          <a href="https://slidysim.github.io/">slidysim.github.io</a> and
+          <a href="https://github.com/dphdmn/openslidy">openslidy</a>.
+          Simulator times for a single 15 puzzle are under a second.</li>
+        <li><strong>Guinness World Records.</strong> Guinness has a category for
+          the <a href="https://www.guinnessworldrecords.com/world-records/fastest-time-to-solve-10-fifteen-puzzles">fastest
+          time to solve ten 15 puzzles</a>. At the time of writing the record was
+          1 minute 9.61 seconds, set by Lim Kai Yi of Malaysia in November 2024,
+          but check the page for the current holder. It also lists records for
+          the <a href="https://www.guinnessworldrecords.com/world-records/528764-fastest-time-to-solve-a-4-x-4-klotski-puzzle">4 × 4
+          Klotski puzzle</a>, which is how the numbered 15 puzzle is known in
+          China, where it is called <em>digital Huarong Dao</em>.</li>
+      </ul>
+      <p>
+        There may be local events and communities that are not covered here.
+        If you know of one, it would be worth adding.
+      </p>
+
+      <h3>Resources</h3>
+      <ul>
+        <li><a href="https://www.speedsolving.com/wiki/index.php/15_puzzle">15
+          puzzle</a>, Speedsolving.com wiki: the named methods.</li>
+        <li><a href="https://www.speedsolving.com/threads/15-puzzle-discussion.31444/">15
+          Puzzle Discussion</a> and the
+          <a href="https://www.speedsolving.com/threads/slidy-puzzles-accomplishment-thread.45292/latest">Slidy
+          Puzzles Accomplishment Thread</a>, on the Speedsolving.com forum:
+          solvers comparing times and ways of solving.</li>
+        <li><a href="https://slidysim.github.io/">SlidySim Leaderboard</a>: the
+          simulator’s community rankings.</li>
+        <li><a href="https://www.jaapsch.net/puzzles/fifteen.htm">Jaap’s Puzzle
+          Page: 14–15 puzzle</a>: the history of the puzzle and the famous
+          unsolvable version.</li>
+        <li><a href="https://en.wikipedia.org/wiki/15_puzzle">15 puzzle</a>,
+          Wikipedia: an overview, including the proof that half of the positions
+          cannot be reached.</li>
+        <li>Aaron F. Archer, <a href="https://www.cs.cmu.edu/afs/cs/academic/class/15859-f01/www/notes/15-puzzle.pdf">‘A
+          Modern Treatment of the 15 Puzzle’</a>, <cite>American Mathematical
+          Monthly</cite>, 106.9 (1999), 793–799: the mathematics of which
+          positions can be solved.</li>
+      </ul>
+    </section>
+
+    <!-- 9 -->
     <section id="pitfalls">
-      <h2>8. Common pitfalls</h2>
+      <h2>9. Common pitfalls</h2>
       <ul>
         <li><strong>Letting the gap wander into finished tiles.</strong> It is
           the commonest mistake. Every tile you disturb has to be placed again.</li>
